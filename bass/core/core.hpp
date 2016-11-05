@@ -131,6 +131,7 @@ protected:
   auto filepath() -> string;
   auto text(string s) -> string;
   auto character(string s) -> int64_t;
+  auto validateName(const string& name) -> void;
 
   //internal state
   Instruction* activeInstruction = nullptr;  //used by notice, warning, error

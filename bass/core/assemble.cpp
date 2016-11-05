@@ -26,6 +26,7 @@ auto Bass::assemble(const string& statement) -> bool {
   if(s.match("scope ?* {") || s.match("scope {")) {
     s.trim("scope ", "{", 1L).strip();
     if(s.endsWith(":")) setConstant(s.trimRight(":", 1L), pc());
+    if(s) validateName(s);
     scope.append(s);
     return true;
   }
