@@ -104,6 +104,7 @@ ora *16          ;$05 =a
 ora *08          ;$04 =a
 //
 ora.w *16,x      ;$15 ~a
+ora.w *16,y      ;$16 ~a
 ora.b *08,x      ;$14 ~a
 ora.w *16        ;$05 ~a
 ora.b *08        ;$04 ~a
@@ -122,6 +123,7 @@ and *16          ;$25 =a
 and *08          ;$24 =a
 //
 and.w *16,x      ;$35 ~a
+and.w *16,y      ;$36 ~a
 and.b *08,x      ;$34 ~a
 and.w *16        ;$25 ~a
 and.b *08        ;$24 ~a
@@ -140,6 +142,7 @@ eor *16          ;$45 =a
 eor *08          ;$44 =a
 //
 eor.w *16,x      ;$55 ~a
+eor.w *16,y      ;$56 ~a
 eor.b *08,x      ;$54 ~a
 eor.w *16        ;$45 ~a
 eor.b *08        ;$44 ~a
@@ -158,6 +161,7 @@ cmp *16          ;$65 =a
 cmp *08          ;$64 =a
 //
 cmp.w *16,x      ;$75 ~a
+cmp.w *16,y      ;$76 ~a
 cmp.b *08,x      ;$74 ~a
 cmp.w *16        ;$65 ~a
 cmp.b *08        ;$64 ~a
@@ -176,6 +180,7 @@ adc *16          ;$85 =a
 adc *08          ;$84 =a
 //
 adc.w *16,x      ;$95 ~a
+adc.w *16,y      ;$96 ~a
 adc.b *08,x      ;$94 ~a
 adc.w *16        ;$85 ~a
 adc.b *08        ;$84 ~a
@@ -194,6 +199,7 @@ sbc *16          ;$a5 =a
 sbc *08          ;$a4 =a
 //
 sbc.w *16,x      ;$b5 ~a
+sbc.w *16,y      ;$b6 ~a
 sbc.b *08,x      ;$b4 ~a
 sbc.w *16        ;$a5 ~a
 sbc.b *08        ;$a4 ~a
@@ -211,6 +217,7 @@ sta *16          ;$c5 =a
 sta *08          ;$c4 =a
 //
 sta.w *16,x      ;$d5 ~a
+sta.w *16,y      ;$d6 ~a
 sta.b *08,x      ;$d4 ~a
 sta.w *16        ;$c5 ~a
 sta.b *08        ;$c4 ~a
@@ -227,6 +234,7 @@ lda *16          ;$e5 =a
 lda *08          ;$e4 =a
 //
 lda.w *16,x      ;$f5 ~a
+lda.w *16,y      ;$f6 ~a
 lda.b *08,x      ;$f4 ~a
 lda.w *16        ;$e5 ~a
 lda.b *08        ;$e4 ~a
