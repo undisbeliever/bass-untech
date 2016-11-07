@@ -419,6 +419,26 @@
     }
     </pre>
 
+    <h3>Scopeless Variables</h3>
+    <p>Variables, defines and constants may be prefixed with <tt>::</tt> to
+    ensure they remain in the root scope. This is useful for macros that use an
+    internal state and are called in many different invocation scopes.</p>
+
+    <h4>Example:</h4>
+    <pre>
+    define ::count(0)
+    macro increment(by) {
+    &nbsp;&nbsp;global evaluate ::count({::count} + {by})
+    }
+
+    increment(3)
+
+    scope inner {
+    &nbsp;&nbsp;increment(4)
+    }
+    // {::count} is now 7
+    </pre>
+
     <h3>include "filename"</h3>
     <p>Note that this command is parsed in the very first phase, and is only
     noted here for completeness. It includes another source file in place of

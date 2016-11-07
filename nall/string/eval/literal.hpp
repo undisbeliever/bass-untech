@@ -7,7 +7,7 @@ inline auto isLiteral(const char*& s) -> bool {
   return (n >= 'A' && n <= 'Z')
       || (n >= 'a' && n <= 'z')
       || (n >= '0' && n <= '9')
-      || (n == '%' || n == '$' || n == '_' || n == '.')
+      || (n == '%' || n == '$' || n == '_' || n == '.' || n == ':')
       || (n == '\'' || n == '\"');
 }
 
@@ -78,7 +78,7 @@ inline auto literalString(const char*& s) -> string {
 inline auto literalVariable(const char*& s) -> string {
   const char* p = s;
 
-  while(p[0] == '_' || p[0] == '.' || (p[0] >= 'A' && p[0] <= 'Z') || (p[0] >= 'a' && p[0] <= 'z') || (p[0] >= '0' && p[0] <= '9')) p++;
+  while(p[0] == '_' || p[0] == '.' || p[0] == ':' || (p[0] >= 'A' && p[0] <= 'Z') || (p[0] >= 'a' && p[0] <= 'z') || (p[0] >= '0' && p[0] <= '9')) p++;
 
   string result = slice(s, 0, p - s);
   s = p;
@@ -91,7 +91,7 @@ inline auto literal(const char*& s) -> string {
   if(p[0] >= '0' && p[0] <= '9') return literalNumber(s);
   if(p[0] == '%' || p[0] == '$') return literalNumber(s);
   if(p[0] == '\'' || p[0] == '\"') return literalString(s);
-  if(p[0] == '_' || p[0] == '.' || (p[0] >= 'A' && p[0] <= 'Z') || (p[0] >= 'a' && p[0] <= 'z')) return literalVariable(s);
+  if(p[0] == '_' || p[0] == '.' || p[0] == ':' || (p[0] >= 'A' && p[0] <= 'Z') || (p[0] >= 'a' && p[0] <= 'z')) return literalVariable(s);
 
   throw "invalid literal";
 }
