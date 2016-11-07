@@ -36,6 +36,7 @@ auto Bass::source(const string& filename) -> bool {
     if(auto position = lines[lineNumber].find("//")) {
       lines[lineNumber].resize(position());  //remove comments
     }
+    reduceWhitespace(lines[lineNumber]);
 
     auto blocks = lines[lineNumber].qsplit(";").strip();
     for(uint blockNumber : range(blocks)) {
@@ -90,6 +91,30 @@ auto Bass::assemble(bool strict) -> bool {
 }
 
 //internal
+
+auto Bass::reduceWhitespace(string& s) const -> void {
+// ' +' -> ' '
+
+  bool quoted = false;
+  unsigned len = s.length();
+  char *p = s.get();
+
+  for(unsigned i = 0; i < len; i++) {
+    if(p[i] == '"') { quoted = !quoted; continue; }
+
+    if(!quoted) {
+      if(p[i] == ' ' && p[i + 1] == ' ') {
+        unsigned j = i + 2;
+        while(j < len && p[j] == ' ') j++;
+
+        memory::move(p + i + 1, p + j, len - j + 1);
+        len -= j - i - 1;
+      }
+    }
+  }
+
+  s.resize(len);
+}
 
 auto Bass::pc() const -> uint {
   return origin + base;

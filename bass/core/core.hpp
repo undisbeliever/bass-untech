@@ -81,6 +81,7 @@ protected:
   auto writePhase() const -> bool { return phase == Phase::Write; }
 
   //core.cpp
+  auto reduceWhitespace(string& s) const -> void;
   auto pc() const -> uint;
   auto seek(uint offset) -> void;
   auto write(uint64_t data, uint length = 1) -> void;
