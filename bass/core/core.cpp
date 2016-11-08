@@ -33,7 +33,7 @@ auto Bass::source(const string& filename) -> bool {
 
   auto lines = data.split("\n");
   for(uint lineNumber : range(lines)) {
-    if(auto position = lines[lineNumber].find("//")) {
+    if(auto position = lines[lineNumber].qfind("//")) {
       lines[lineNumber].resize(position());  //remove comments
     }
     reduceWhitespace(lines[lineNumber]);
