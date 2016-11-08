@@ -139,6 +139,7 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
       StackFrame frame;
       stackFrame.append(frame);
       stackFrame.right().ip = ip;
+      stackFrame.right().invokedBy = &i;
       stackFrame.right().scoped = macro().scoped;
 
       if(macro().scoped) scope.append(p(0));
