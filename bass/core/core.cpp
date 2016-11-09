@@ -19,6 +19,18 @@ auto Bass::target(const string& filename, bool create) -> bool {
   return true;
 }
 
+auto Bass::symFile(const string& filename) -> bool {
+  if(symbolFile.open()) symbolFile.close();
+  if(!filename) return true;
+
+  if(!symbolFile.open(filename, file::mode::write)) {
+    print(stderr, "warning: unable to open symbol file: ", filename, "\n");
+    return false;
+  }
+
+  return true;
+}
+
 auto Bass::source(const string& filename) -> bool {
   if(!file::exists(filename)) {
     print(stderr, "warning: source file not found: ", filename, "\n");
@@ -136,6 +148,18 @@ auto Bass::write(uint64_t data, uint length) -> void {
     }
   }
   origin += length;
+}
+
+auto Bass::writeSymbolLabel(int64_t value, const string& name) -> void {
+  if(writePhase()) {
+    if(symbolFile.open()) {
+      string scopedName = name;
+      bool rootScope = scopedName.beginsWith("::");
+      if(!rootScope && scope.size()) scopedName = {scope.merge("."), ".", name};
+
+      symbolFile.print(hex(value, 8), ' ', scopedName, '\n');
+    }
+  }
 }
 
 auto Bass::printInstruction() -> void {

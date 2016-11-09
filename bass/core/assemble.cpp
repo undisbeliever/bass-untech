@@ -25,7 +25,10 @@ auto Bass::assemble(const string& statement) -> bool {
   //scope name {
   if(s.match("scope ?* {") || s.match("scope {")) {
     s.trim("scope ", "{", 1L).strip();
-    if(s.endsWith(":")) setConstant(s.trimRight(":", 1L), pc());
+    if(s.endsWith(":")) {
+      setConstant(s.trimRight(":", 1L), pc());
+      writeSymbolLabel(pc(), s);
+    }
     if(s) validateName(s, false);
     scope.append(s);
     return true;
@@ -42,6 +45,7 @@ auto Bass::assemble(const string& statement) -> bool {
     s.trimRight(" {", 1L);
     s.trimRight(":", 1L);
     setConstant(s, pc());
+    writeSymbolLabel(pc(), s);
     return true;
   }
 
@@ -148,6 +152,7 @@ auto Bass::assemble(const string& statement) -> bool {
     if(name) {
       setConstant({name}, pc());
       setConstant({name, ".size"}, length);
+      writeSymbolLabel(pc(), name);
     }
     fp.seek(offset);
     while(!fp.end() && length--) write(fp.read());

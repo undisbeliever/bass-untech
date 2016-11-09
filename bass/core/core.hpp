@@ -1,5 +1,6 @@
 struct Bass {
   auto target(const string& filename, bool create) -> bool;
+  auto symFile(const string& filename) -> bool;
   auto source(const string& filename) -> bool;
   auto define(const string& name, const string& value) -> void;
   auto constant(const string& name, const string& value) -> void;
@@ -86,6 +87,7 @@ protected:
   auto pc() const -> uint;
   auto seek(uint offset) -> void;
   auto write(uint64_t data, uint length = 1) -> void;
+  auto writeSymbolLabel(int64_t value, const string& name) -> void;
 
   auto printInstruction() -> void;
   auto printInstructionStack() -> void;
@@ -158,5 +160,6 @@ protected:
   bool strict = false;            //upgrade warnings to errors when true
 
   file targetFile;
+  file symbolFile;
   string_vector sourceFilenames;
 };
