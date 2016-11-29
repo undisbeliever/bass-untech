@@ -1,6 +1,6 @@
 include ../nall/GNUmakefile
 
-name := bass
+name := bass-untech
 flags += -I.. -O3
 link +=
 objects := obj/bass.o

@@ -16,5 +16,5 @@ including;
 License
 =======
 
-bass is licensed under the GNU GPLv3.
+bass and bass-untech is licensed under the GNU GPLv3.
 

@@ -1,6 +1,7 @@
-//bass
+//bass-untech
 //license: GPLv3
-//author: byuu
+//original author: byuu
+//forked by: The UnDisbeliever
 //project started: 2013-09-27
 
 #include "bass.hpp"
@@ -10,8 +11,8 @@
 #include <nall/main.hpp>
 auto nall::main(string_vector args) -> void {
   if(args.size() == 1) {
-    print(stderr, "bass v14.05\n");
-    print(stderr, "usage: bass [options] [-o target] source [source ...]\n");
+    print(stderr, "bass-untech v14.05\n");
+    print(stderr, "usage: bass-untech [options] [-o target] source [source ...]\n");
     print(stderr, "\n");
     print(stderr, "options:\n");
     print(stderr, "  -d name[=value]  create define with optional value\n");
