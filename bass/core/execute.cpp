@@ -65,7 +65,7 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
 
   if(s.match("if ?* {")) {
     s.trim("if ", " {", 1L).strip();
-    bool match = evaluate(s, Evaluation::Strict);
+    bool match = evaluate(s);
     ifStack.append(match);
     if(match == false) {
       ip = i.ip;
@@ -78,7 +78,7 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
       ip = i.ip;
     } else {
       s.trim("} else if ", " {", 1L).strip();
-      bool match = evaluate(s, Evaluation::Strict);
+      bool match = evaluate(s);
       ifStack.right() = match;
       if(match == false) {
         ip = i.ip;
@@ -103,7 +103,7 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
 
   if(s.match("while ?* {")) {
     s.trim("while ", " {", 1L).strip();
-    bool match = evaluate(s, Evaluation::Strict);
+    bool match = evaluate(s);
     if(match == false) ip = i.ip;
     return true;
   }

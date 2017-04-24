@@ -11,6 +11,7 @@ including;
  * Symbol file support
  * Improved whitespace handling
  * Printing the instruction stack when displaying error messages
+ * Stricter expression evaluation
 
 
 License

@@ -91,7 +91,7 @@ auto Bass::evaluateLiteral(Eval::Node* node, Evaluation mode) -> int64_t {
 
   if(auto variable = findVariable(s)) return variable().value;
   if(auto constant = findConstant(s)) return constant().value;
-  if(mode != Evaluation::Strict && queryPhase()) return pc();
+  if(mode == Evaluation::Lax && queryPhase()) return pc();
 
   error("unrecognized variable: ", s);
 }
@@ -100,7 +100,7 @@ auto Bass::evaluateAssign(Eval::Node* node, Evaluation mode) -> int64_t {
   string& s = node->link[0]->literal;
 
   if(auto variable = findVariable(s)) {
-    variable().value = evaluate(node->link[1], mode);
+    variable().value = evaluate(node->link[1], Evaluation::Strict);
     return variable().value;
   }
 

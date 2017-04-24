@@ -75,13 +75,13 @@ auto BassTable::assemble(const string& statement) -> bool {
         }
 
         case Format::Type::Absolute: {
-          uint data = evaluate(args[format.argument]);
+          uint data = evaluate(args[format.argument], Evaluation::Lax);
           writeBits(data, opcode.number[format.argument].bits);
           break;
         }
 
         case Format::Type::Relative: {
-          int data = evaluate(args[format.argument]) - (pc + format.displacement);
+          int data = evaluate(args[format.argument], Evaluation::Lax) - (pc + format.displacement);
           uint bits = opcode.number[format.argument].bits;
           int min = -(1 << (bits - 1)), max = +(1 << (bits - 1)) - 1;
           if(data < min || data > max) error("branch out of bounds");
@@ -90,7 +90,7 @@ auto BassTable::assemble(const string& statement) -> bool {
         }
 
         case Format::Type::Repeat: {
-          uint data = evaluate(args[format.argument]);
+          uint data = evaluate(args[format.argument], Evaluation::Lax);
           for(uint n : range(data)) {
             writeBits(format.data, opcode.number[format.argument].bits);
           }
