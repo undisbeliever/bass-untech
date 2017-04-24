@@ -149,7 +149,7 @@ auto Bass::setConstant(const string& name, int64_t value) -> void {
   }
 
   if(auto constant = constants.find({scopedName})) {
-    constant().value = value;
+    if(constant().value != value) error("constant value has changed between the query and write phases: ", scopedName);
   } else {
     constants.insert({scopedName, value});
   }
