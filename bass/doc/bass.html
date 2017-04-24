@@ -307,6 +307,11 @@
     declaration, but subsequently cannot be redefined. Labels are stored as
     constants.</p>
 
+    <p>Expressions in a constant statement can contain forward references. Just
+    remember that bass does not perform delayed evaluation and will abort
+    assembly if the constant's value is unknown when used in a command, a
+    conditional expression, or the write phase.</p>
+
     <h4>Example:</h4>
     <pre>
     variable x(16)
@@ -317,6 +322,9 @@
 
     lda #y&nbsp; //64
     constant y(64)
+
+    constant z(VeryLongLabelName)
+    lda z&nbsp; //VeryLongLabelName
     </pre>
 
     <h3>Labels</h3>

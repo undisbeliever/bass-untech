@@ -1,4 +1,6 @@
 auto Bass::evaluate(const string& expression, Evaluation mode) -> int64_t {
+  forwardReference = false;
+
   maybe<string> name;
   if(expression == "--") name = {"lastLabel#", lastLabelCounter - 2};
   if(expression == "-" ) name = {"lastLabel#", lastLabelCounter - 1};
@@ -91,9 +93,15 @@ auto Bass::evaluateLiteral(Eval::Node* node, Evaluation mode) -> int64_t {
 
   if(auto variable = findVariable(s)) return variable().value;
   if(auto constant = findConstant(s)) return constant().value;
+
+  forwardReference = true;
   if(mode == Evaluation::Lax && queryPhase()) return pc();
 
-  error("unrecognized variable: ", s);
+  if(auto constantName = findConstantName(s)) {
+    error("constant has unknown value: ", constantName());
+  } else {
+    error("unrecognized variable: ", s);
+  }
 }
 
 auto Bass::evaluateAssign(Eval::Node* node, Evaluation mode) -> int64_t {

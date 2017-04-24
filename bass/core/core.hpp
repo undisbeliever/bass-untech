@@ -128,8 +128,10 @@ protected:
   auto findVariable(const string& name, bool local) -> maybe<Variable&>;
   auto findVariable(const string& name) -> maybe<Variable&>;
 
+  auto setUnknownConstant(const string& name) -> void;
   auto setConstant(const string& name, int64_t value) -> void;
   auto findConstant(const string& name) -> maybe<Constant&>;
+  auto findConstantName(const string& name) -> maybe<string>;
 
   auto evaluateDefines(string& statement) -> void;
 
@@ -143,6 +145,7 @@ protected:
   vector<Instruction> program;    //parsed source code statements
   vector<BlockStack> blockStack;  //track the start and end of blocks
   set<Define> defines;            //defines specified on the terminal
+  hashset<string> constantNames;  //set of constant names, including those with unknown values
   hashset<Constant> constants;    //constants support forward-declaration
   vector<StackFrame> stackFrame;  //macros, defines and variables do not
   vector<bool> ifStack;           //track conditional matching
@@ -158,6 +161,8 @@ protected:
   uint lastLabelCounter = 1;      //- instance counter
   uint nextLabelCounter = 1;      //+ instance counter
   bool strict = false;            //upgrade warnings to errors when true
+
+  bool forwardReference = false;  //true if the last evaluate(string) call contained a forward reference
 
   file targetFile;
   file symbolFile;

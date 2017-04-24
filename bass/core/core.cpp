@@ -78,6 +78,7 @@ auto Bass::define(const string& name, const string& value) -> void {
 
 auto Bass::constant(const string& name, const string& value) -> void {
   try {
+    constantNames.insert(name);
     constants.insert({name, evaluate(value)});
   } catch(...) {
   }
