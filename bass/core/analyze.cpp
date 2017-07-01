@@ -27,7 +27,7 @@ auto Bass::analyzeInstruction(Instruction& i) -> bool {
     return true;
   }
 
-  if(s.match("scope ?* {") || s.match("scope {")) {
+  if(s.match("namespace ?* {") || s.match("function ?* {")) {
     blockStack.append({ip - 1, "scope"});
     return true;
   }

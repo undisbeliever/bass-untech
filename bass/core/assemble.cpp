@@ -22,15 +22,22 @@ auto Bass::assemble(const string& statement) -> bool {
     return true;
   }
 
-  //scope name {
-  if(s.match("scope ?* {") || s.match("scope {")) {
-    s.trim("scope ", "{", 1L).strip();
-    if(s.endsWith(":")) setConstant(s.trimRight(":", 1L), pc());
+  //namespace name {
+  if(s.match("namespace ?* {")) {
+    s.trim("namespace ", "{", 1L).strip();
     scope.append(s);
     return true;
   }
 
-  //}
+  //function name {
+  if(s.match("function ?* {")) {
+    s.trim("function ", "{", 1L).strip();
+    setConstant(s, pc());
+    scope.append(s);
+    return true;
+  }
+
+  //} namespace or } function
   if(s.match("} endscope")) {
     scope.removeRight();
     return true;
@@ -56,7 +63,7 @@ auto Bass::assemble(const string& statement) -> bool {
     return true;
   }
 
-  //}
+  //} block
   if(s.match("} endconstant")) {
     return true;
   }

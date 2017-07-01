@@ -46,7 +46,7 @@
     </style>
   </head>
   <body>
-    <h1>bass v14</h1>
+    <h1>bass v14.06</h1>
     Author: byuu<br>
     License: GPLv3<br>
     <br>
@@ -342,9 +342,9 @@
 
     <h3>Scoping</h3>
     <p>Macros, defines, variables and constants can be scoped. This allows reuse
-    of common names like <i>loop</i> and <i>finish</i> inside of parent scopes,
-    without causing declaration collisions. Note that labels are stored as
-    constants, meaning that scoping also applies to labels.</p>
+    of common names like <i>loop</i> and <i>finish</i> inside of scopes, without
+    causing declaration collisions. Note that labels are stored as constants,
+    meaning that scoping also applies to labels.</p>
 
     <p>It's also important to understand that for macro scoping, the macro
     name's scope is determined where the macro is declared, and the actual scope
@@ -354,7 +354,7 @@
     <pre>
     variable offset(16)
 
-    scope information {
+    namespace information {
     &nbsp;&nbsp;variable length(32)
 
     &nbsp;&nbsp;lda #offset  //16
@@ -366,29 +366,20 @@
     </pre>
 
     <h3>Scoped Macros</h3>
-    <p>It is possible to create a new scope that matches the name of the macro
-    when a macro is invoked, which is destroyed when the macro terminates. This
-    is effectively a short-hand syntax for specifying a macro and then a scope
-    inside of the macro.</p>
+    <p>Macros are always automatically scoped, as they create their own stack
+    frames for defines, variables, and other macros. You will need to use the
+    global prefix to access defines and variables outside of the macro.</p>
 
     <h4>Example:</h4>
     <pre>
-    macro unscoped() {
-    &nbsp;&nbsp;variable x(16)
+    macro context() {
+    &nbsp;&nbsp;global variable value(32)
     }
 
-    unscoped(); print x, "\n"
+    context()  //macro must be executed to create the variable
 
-    macro scope scoped() {
-    &nbsp;&nbsp;variable x(16)
-    }
-
-    scoped(); print scoped.x, "\n"
+    print context.value
     </pre>
-
-    <p>The <i>scope</i> keyword is placed after the <i>macro</i> keyword to
-    signify that the scope applies to the macro invocation, rather than to the
-    macro declaration.</p>
 
     <h3>Scoped Labels</h3>
     <p>It is possible to declare a scope and label at the same time, which is a
@@ -396,8 +387,11 @@
 
     <h4>Example:</h4>
     <pre>
-    scope labelName: {
+    function main {
+    &nbsp;&nbsp;subroutine:
     }
+
+    jsr main.subroutine
     </pre>
 
     <h3>Unscoped Blocks</h3>

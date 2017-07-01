@@ -15,11 +15,13 @@
 
 #include <nall/algorithm.hpp>
 #include <nall/any.hpp>
+#include <nall/arithmetic.hpp>
+#include <nall/array.hpp>
 #include <nall/atoi.hpp>
 #include <nall/bit.hpp>
 #include <nall/bit-field.hpp>
 #include <nall/bit-vector.hpp>
-#include <nall/config.hpp>
+#include <nall/chrono.hpp>
 #include <nall/directory.hpp>
 #include <nall/dl.hpp>
 #include <nall/endian.hpp>
@@ -32,6 +34,7 @@
 #include <nall/inode.hpp>
 #include <nall/interpolation.hpp>
 #include <nall/intrinsics.hpp>
+#include <nall/location.hpp>
 #include <nall/map.hpp>
 #include <nall/matrix.hpp>
 #include <nall/maybe.hpp>

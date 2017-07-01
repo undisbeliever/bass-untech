@@ -1,66 +1,50 @@
 #pragma once
 
-#include <nall/range.hpp>
-#include <nall/string.hpp>
+#include <nall/hash/hash.hpp>
 
 namespace nall { namespace Hash {
 
-struct SHA256 {
-  SHA256() { reset(); }
-  SHA256(const void* values, uint size) : SHA256() { data(values, size); }
-  SHA256(const vector<uint8_t>& values) : SHA256() { data(values); }
-  SHA256(const string& values) : SHA256() { data(values); }
+struct SHA256 : Hash {
+  nallHash(SHA256)
 
-  auto reset() -> void {
-    for(auto n : input) n = 0;
-    for(auto n : w) n = 0;
-    for(auto n : range(8)) h[n] = square(n);
+  auto reset() -> void override {
+    for(auto& n : queue) n = 0;
+    for(auto& n : w) n = 0;
+    for(auto  n : range(8)) h[n] = square(n);
     queued = length = 0;
   }
 
-  auto data(uint8_t value) -> void {
+  auto input(uint8_t value) -> void override {
     byte(value);
     length++;
   }
 
-  auto data(const void* values, uint size) -> void {
-    length += size;
-    auto p = (const uint8_t*)values;
-    while(size--) byte(*p++);
-  }
-
-  auto data(const vector<uint8_t>& values) -> void {
-    for(auto value : values) data(value);
-  }
-
-  auto data(const string& values) -> void {
-    for(auto value : values) data(value);
-  }
-
-  auto value() const -> vector<uint8_t> {
+  auto output() const -> vector<uint8_t> override {
     SHA256 self(*this);
     self.finish();
     vector<uint8_t> result;
-    for(auto n : range(32)) result.append(self.h[n >> 2] >> ((3 - (n & 3)) << 3));
+    for(auto h : self.h) {
+      for(auto n : rrange(4)) result.append(h >> n * 8);
+    }
     return result;
   }
 
-  inline auto digest() const -> string {
-    string result;
-    for(auto n : value()) result.append(hex(n, 2L));
-    return result;
+  auto value() const -> uint256_t {
+    uint256_t value = 0;
+    for(auto byte : output()) value = value << 8 | byte;
+    return value;
   }
 
 private:
   auto byte(uint8_t value) -> void {
-    auto shift = (3 - (queued & 3)) * 8;
-    input[queued >> 2] &= ~(0xff << shift);
-    input[queued >> 2] |= (value << shift);
+    uint32_t shift = (3 - (queued & 3)) * 8;
+    queue[queued >> 2] &= ~(0xff << shift);
+    queue[queued >> 2] |= (value << shift);
     if(++queued == 64) block(), queued = 0;
   }
 
   auto block() -> void {
-    for(auto n : range(16)) w[n] = input[n];
+    for(auto n : range(16)) w[n] = queue[n];
     for(auto n : range(16, 64)) {
       uint32_t a = ror(w[n - 15],  7) ^ ror(w[n - 15], 18) ^ (w[n - 15] >>  3);
       uint32_t b = ror(w[n -  2], 17) ^ ror(w[n -  2], 19) ^ (w[n -  2] >> 10);
@@ -83,11 +67,7 @@ private:
   auto finish() -> void {
     byte(0x80);
     while(queued != 56) byte(0x00);
-    for(auto n : range(8)) byte((length << 3) >> ((7 - n) << 3));
-  }
-
-  auto ror(uint32_t x, uint32_t n) -> uint32_t {
-    return (x >> n) | (x << 32 - n);
+    for(auto n : range(8)) byte(length * 8 >> (7 - n) * 8);
   }
 
   auto square(uint n) -> uint32_t {
@@ -111,11 +91,11 @@ private:
     return value[n];
   }
 
-  uint32_t input[16];
-  uint32_t queued;
-  uint32_t w[64];
-  uint32_t h[8];
-  uint64_t length;
+  uint32_t queue[16] = {0};
+  uint32_t w[64] = {0};
+  uint32_t h[8] = {0};
+  uint32_t queued = 0;
+  uint64_t length = 0;
 };
 
 }}

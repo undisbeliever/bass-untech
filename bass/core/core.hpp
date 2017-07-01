@@ -22,7 +22,7 @@ protected:
   struct Macro {
     Macro() {}
     Macro(const string& name) : name(name) {}
-    Macro(const string& name, const string_vector& parameters, uint ip, bool scoped) : name(name), parameters(parameters), ip(ip), scoped(scoped) {}
+    Macro(const string& name, const string_vector& parameters, uint ip) : name(name), parameters(parameters), ip(ip) {}
 
     auto hash() const -> uint { return name.hash(); }
     auto operator==(const Macro& source) const -> bool { return name == source.name; }
@@ -31,7 +31,6 @@ protected:
     string name;
     string_vector parameters;
     uint ip;
-    bool scoped;
   };
 
   struct Define {
@@ -64,7 +63,6 @@ protected:
 
   struct StackFrame {
     uint ip;
-    bool scoped;
 
     hashset<Macro> macros;
     hashset<Define> defines;
@@ -111,7 +109,7 @@ protected:
   virtual auto assemble(const string& statement) -> bool;
 
   //utility.cpp
-  auto setMacro(const string& name, const string_vector& parameters, uint ip, bool scoped, bool local) -> void;
+  auto setMacro(const string& name, const string_vector& parameters, uint ip, bool local) -> void;
   auto findMacro(const string& name, bool local) -> maybe<Macro&>;
   auto findMacro(const string& name) -> maybe<Macro&>;
 

@@ -1,16 +1,15 @@
-auto Bass::setMacro(const string& name, const string_vector& parameters, uint ip, bool scoped, bool local) -> void {
+auto Bass::setMacro(const string& name, const string_vector& parameters, uint ip, bool local) -> void {
   if(stackFrame.size() == 0) return;
   auto& macros = stackFrame[local ? stackFrame.size() - 1 : 0].macros;
 
   string scopedName = {name, ":", parameters.size()};
-  if(scope.size()) scopedName = {scope.merge("."), ".", scopedName};
+  if(scope.size() && local) scopedName = {scope.merge("."), ".", scopedName};
 
   if(auto macro = macros.find({scopedName})) {
     macro().parameters = parameters;
     macro().ip = ip;
-    macro().scoped = scoped;
   } else {
-    macros.insert({scopedName, parameters, ip, scoped});
+    macros.insert({scopedName, parameters, ip});
   }
 }
 
@@ -42,7 +41,7 @@ auto Bass::setDefine(const string& name, const string& value, bool local) -> voi
   auto& defines = stackFrame[local ? stackFrame.size() - 1 : 0].defines;
 
   string scopedName = name;
-  if(scope.size()) scopedName = {scope.merge("."), ".", name};
+  if(scope.size() && local) scopedName = {scope.merge("."), ".", name};
 
   if(auto define = defines.find({scopedName})) {
     define().value = value;
@@ -79,7 +78,7 @@ auto Bass::setVariable(const string& name, int64_t value, bool local) -> void {
   auto& variables = stackFrame[local ? stackFrame.size() - 1 : 0].variables;
 
   string scopedName = name;
-  if(scope.size()) scopedName = {scope.merge("."), ".", name};
+  if(scope.size() && local) scopedName = {scope.merge("."), ".", name};
 
   if(auto variable = variables.find({scopedName})) {
     variable().value = value;
@@ -158,7 +157,7 @@ auto Bass::evaluateDefines(string& s) -> void {
 }
 
 auto Bass::filepath() -> string {
-  return pathname(sourceFilenames[activeInstruction->fileNumber]);
+  return Location::path(sourceFilenames[activeInstruction->fileNumber]);
 }
 
 auto Bass::text(string s) -> string {

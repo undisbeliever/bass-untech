@@ -78,52 +78,15 @@ template<typename... P> auto print(FILE* fp, P&&... p) -> void {
   fwrite(s.data(), 1, s.size(), fp);
 }
 
-/*
-auto integer(intmax_t value, long precision, char padchar) -> string {
-  string buffer;
-  buffer.resize(1 + sizeof(intmax_t) * 3);
-  char* p = buffer.get();
-
-  bool negative = value < 0;
-  if(negative) value = -value;  //make positive
-  uint size = 0;
-  do {
-    p[size++] = '0' + (value % 10);
-    value /= 10;
-  } while(value);
-  if(negative) p[size++] = '-';
-  buffer.resize(size);
-  buffer.reverse();
-  if(precision) buffer.size(precision, padchar);
-  return buffer;
-}
-
-auto natural(uintmax_t value, long precision, char padchar) -> string {
-  string buffer;
-  buffer.resize(sizeof(uintmax_t) * 3);
-  char* p = buffer.get();
-
-  uint size = 0;
-  do {
-    p[size++] = '0' + (value % 10);
-    value /= 10;
-  } while(value);
-  buffer.resize(size);
-  buffer.reverse();
-  if(precision) buffer.size(precision, padchar);
-  return buffer;
-}
-*/
-
-template<typename T> auto numeral(T value, long precision, char padchar) -> string {
+template<typename T> auto pad(const T& value, long precision, char padchar) -> string {
   string buffer{value};
   if(precision) buffer.size(precision, padchar);
   return buffer;
 }
 
-auto hex(uintmax_t value, long precision, char padchar) -> string {
+auto hex(uintmax value, long precision, char padchar) -> string {
   string buffer;
-  buffer.resize(sizeof(uintmax_t) * 2);
+  buffer.resize(sizeof(uintmax) * 2);
   char* p = buffer.get();
 
   uint size = 0;
@@ -138,9 +101,9 @@ auto hex(uintmax_t value, long precision, char padchar) -> string {
   return buffer;
 }
 
-auto octal(uintmax_t value, long precision, char padchar) -> string {
+auto octal(uintmax value, long precision, char padchar) -> string {
   string buffer;
-  buffer.resize(sizeof(uintmax_t) * 3);
+  buffer.resize(sizeof(uintmax) * 3);
   char* p = buffer.get();
 
   uint size = 0;
@@ -154,9 +117,9 @@ auto octal(uintmax_t value, long precision, char padchar) -> string {
   return buffer;
 }
 
-auto binary(uintmax_t value, long precision, char padchar) -> string {
+auto binary(uintmax value, long precision, char padchar) -> string {
   string buffer;
-  buffer.resize(sizeof(uintmax_t) * 8);
+  buffer.resize(sizeof(uintmax) * 8);
   char* p = buffer.get();
 
   uint size = 0;
@@ -170,23 +133,14 @@ auto binary(uintmax_t value, long precision, char padchar) -> string {
   return buffer;
 }
 
-template<typename T> auto pointer(const T* value, long precision) -> string {
-  if(value == nullptr) return "(nullptr)";
-  return {"0x", hex((uintptr_t)value, precision)};
-}
-
-auto pointer(uintptr_t value, long precision) -> string {
+auto pointer(uintptr value, long precision) -> string {
   if(value == 0) return "(nullptr)";
   return {"0x", hex(value, precision)};
 }
 
-/*
-auto real(long double value) -> string {
-  string temp;
-  temp.resize(fromReal(nullptr, value));
-  fromReal(temp.get(), value);
-  return temp;
+template<typename T> auto pointer(const T* value, long precision) -> string {
+  if(value == nullptr) return "(nullptr)";
+  return {"0x", hex((uintptr)value, precision)};
 }
-*/
 
 }

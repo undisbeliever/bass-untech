@@ -1,8 +1,9 @@
+build := release
 include ../nall/GNUmakefile
 
+flags += -I..
+
 name := bass
-flags += -I.. -O3
-link +=
 objects := obj/bass.o
 
 all: $(objects)

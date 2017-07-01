@@ -36,8 +36,8 @@ ifeq ($(platform),)
   endif
 endif
 
-cflags := -x c -std=c99
-objcflags := -x objective-c -std=c99
+cflags := -x c -std=c11
+objcflags := -x objective-c -std=c11
 cppflags := -x c++ -std=c++14
 objcppflags := -x objective-c++ -std=c++14
 flags :=
@@ -59,17 +59,35 @@ ifeq ($(compiler),)
   endif
 endif
 
+# build settings
+ifeq ($(build),release)
+  flags += -O3
+else ifeq ($(build),stable)
+  flags += -O1
+else ifeq ($(build),debug)
+  flags += -g
+else ifeq ($(build),profile)
+  flags += -pg
+  link += -pg
+else ifeq ($(build),instrument)
+  flags += -O3 -fprofile-generate
+  link += -lgcov
+else ifeq ($(build),optimize)
+  flags += -O3 -fprofile-use
+endif
+
 # clang settings
 ifeq ($(findstring clang++,$(compiler)),clang++)
-  flags += -fwrapv
+  flags += -fno-strict-aliasing -fwrapv
 # gcc settings
 else ifeq ($(findstring g++,$(compiler)),g++)
-  flags += -fwrapv
+  flags += -fno-strict-aliasing -fwrapv
 endif
 
 # windows settings
 ifeq ($(platform),windows)
   link += -lws2_32 -lole32
+  windres := windres
 endif
 
 # macosx settings

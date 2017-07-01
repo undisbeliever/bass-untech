@@ -44,7 +44,7 @@ auto Bass::source(const string& filename) -> bool {
 
       if(statement.match("include \"?*\"")) {
         statement.trim("include \"", "\"", 1L);
-        source({pathname(filename), statement});
+        source({Location::path(filename), statement});
       } else {
         Instruction instruction;
         instruction.statement = statement;

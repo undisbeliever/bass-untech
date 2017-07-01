@@ -59,8 +59,8 @@ namespace Math {
 #endif
 
 #if defined(PLATFORM_WINDOWS)
-  //fight Microsoft's ardent efforts at vendor lock-in
-
+  #undef  IN
+  #undef  OUT
   #undef  interface
   #define dllexport __declspec(dllexport)
   #define MSG_NOSIGNAL 0
@@ -104,18 +104,12 @@ namespace Math {
 #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)
   #define neverinline   __attribute__((noinline))
   #define alwaysinline  inline __attribute__((always_inline))
-  #if !defined(PLATFORM_MACOSX)
-  //todo: we want this prefix; but it causes compilation errors
-  #define deprecated    __attribute__((deprecated))
-  #endif
 #elif defined(COMPILER_VISUALCPP)
   #define neverinline   __declspec(noinline)
   #define alwaysinline  inline __forceinline
-  #define deprecated    __declspec(deprecated)
 #else
   #define neverinline
   #define alwaysinline  inline
-  #define deprecated
 #endif
 
 #if defined(COMPILER_CLANG) || defined(COMPILER_GCC)

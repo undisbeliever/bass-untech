@@ -31,10 +31,8 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
     if(!local) s.trimLeft("global ", 1L);
     s.trim("macro ", ") {", 1L);
     auto p = s.split("(", 1L);
-    bool scoped = p(0).beginsWith("scope ");
-    p(0).trimLeft("scope ", 1L);
     auto a = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
-    setMacro(p(0), a, ip, scoped, local);
+    setMacro(p(0), a, ip, local);
     ip = i.ip;
     return true;
   }
@@ -139,9 +137,8 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
       StackFrame frame;
       stackFrame.append(frame);
       stackFrame.right().ip = ip;
-      stackFrame.right().scoped = macro().scoped;
 
-      if(macro().scoped) scope.append(p(0));
+      scope.append(p(0));
 
       setDefine("#", {"_", macroInvocationCounter++}, true);
       for(auto& parameter : parameters) {
@@ -156,7 +153,7 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
 
   if(s.match("} endmacro")) {
     ip = stackFrame.right().ip;
-    if(stackFrame.right().scoped) scope.removeRight();
+    scope.removeRight();
     stackFrame.removeRight();
     return true;
   }

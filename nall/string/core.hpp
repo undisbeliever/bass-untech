@@ -20,9 +20,34 @@ auto string::operator[](int position) const -> const char& {
   return data()[position];
 }
 
+auto string::operator()(int position, char fallback) const -> char {
+  if(position > size() + 1) return fallback;
+  return data()[position];
+}
+
 template<typename... P> auto string::assign(P&&... p) -> string& {
   resize(0);
   return append(forward<P>(p)...);
+}
+
+template<typename T, typename... P> auto string::prepend(const T& value, P&&... p) -> string& {
+  prepend(forward<P>(p)...);
+  return _prepend(make_string(value));
+}
+
+template<typename... P> auto string::prepend(const nall::string_format& value, P&&... p) -> string& {
+  prepend(forward<P>(p)...);
+  return format(value);
+}
+
+auto string::prepend() -> string& {
+  return *this;
+}
+
+template<typename T> auto string::_prepend(const stringify<T>& source) -> string& {
+  resize(source.size() + size());
+  memory::move(get() + source.size(), get(), size() - source.size());
+  memory::copy(get(), source.data(), source.size());
 }
 
 template<typename T, typename... P> auto string::append(const T& value, P&&... p) -> string& {

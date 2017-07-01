@@ -52,7 +52,9 @@ xba            ;$eb
 xce            ;$fb
 //
 tcd            ;$5b
+tcs            ;$1b
 tdc            ;$7b
+tsc            ;$3b
 
 asl #*08       ;*a:$0a
 dec #*08       ;*a:$3a
