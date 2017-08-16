@@ -1,6 +1,6 @@
 #define arch(name) static string Arch_##name
-#include "snes-cpu.arch"
-#include "snes-smp.arch"
+#include "architectures/spc700.arch"
+#include "architectures/wdc65816.arch"
 #undef arch
 
 auto BassTable::initialize() -> void {
@@ -12,17 +12,17 @@ auto BassTable::initialize() -> void {
 }
 
 auto BassTable::assemble(const string& statement) -> bool {
-  if(Bass::assemble(statement) == true) return true;
+  if(Bass::assemble(statement)) return true;
 
   string s = statement;
 
-  if(s.match("arch ?*")) {
-    s.trimLeft("arch ", 1L);
+  if(s.match("architecture ?*")) {
+    s.trimLeft("architecture ", 1L);
     string data;
     if(0);
     else if(s == "reset") data = "";
-    else if(s == "snes.cpu") data = Arch_snes_cpu;
-    else if(s == "snes.smp") data = Arch_snes_smp;
+    else if(s == "spc700") data = Arch_spc700;
+    else if(s == "wdc65816") data = Arch_wdc65816;
     else if(s.match("\"?*\"")) {
       s.trim("\"", "\"", 1L);
       s = {Location::path(sourceFilenames.right()), s};
@@ -45,7 +45,7 @@ auto BassTable::assemble(const string& statement) -> bool {
   uint pc = this->pc();
 
   for(auto& opcode : table) {
-    if(tokenize(s, opcode.pattern) == false) continue;
+    if(!tokenize(s, opcode.pattern)) continue;
 
     string_vector args;
     tokenize(args, s, opcode.pattern);

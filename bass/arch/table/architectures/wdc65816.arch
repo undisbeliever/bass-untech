@@ -1,4 +1,4 @@
-arch(snes_cpu) = R"(
+arch(wdc65816) = R"(
 
 asl            ;$0a
 clc            ;$18

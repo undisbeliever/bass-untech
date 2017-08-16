@@ -1,4 +1,4 @@
-arch(snes_smp) = R"(
+arch(spc700) = R"(
 
 nop              ;$00
 brk              ;$0f

@@ -30,7 +30,7 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
     bool global = s.beginsWith("global ");
     if(global) s.trimLeft("global ", 1L);
     s.trim("macro ", ") {", 1L);
-    auto p = s.split("(", 1L);
+    auto p = s.split("(", 1L).strip();
     auto a = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
     setMacro(p(0), a, ip, inlined, global);
     ip = i.ip;
@@ -42,7 +42,7 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
     bool global = s.beginsWith("global ");
     if(global) s.trimLeft("global ", 1L);
     s.trim("inline ", ") {", 1L);
-    auto p = s.split("(", 1L);
+    auto p = s.split("(", 1L).strip();
     auto a = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
     setMacro(p(0), a, ip, inlined, global);
     ip = i.ip;
@@ -52,7 +52,7 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
   if(s.match("define ?*(*)") || s.match("global define ?*(*)")) {
     bool global = s.beginsWith("global ");
     if(global) s.trimLeft("global ", 1L);
-    auto p = s.trim("define ", ")", 1L).split("(", 1L);
+    auto p = s.trim("define ", ")", 1L).split("(", 1L).strip();
     setDefine(p(0), p(1), global);
     return true;
   }
@@ -60,7 +60,7 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
   if(s.match("evaluate ?*(*)") || s.match("global evaluate ?*(*)")) {
     bool global = s.beginsWith("global ");
     if(global) s.trimLeft("global ", 1L);
-    auto p = s.trim("evaluate ", ")", 1L).split("(", 1L);
+    auto p = s.trim("evaluate ", ")", 1L).split("(", 1L).strip();
     setDefine(p(0), evaluate(p(1)), global);
     return true;
   }
@@ -68,7 +68,7 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
   if(s.match("variable ?*(*)") || s.match("global variable ?*(*)")) {
     bool global = s.beginsWith("global ");
     if(global) s.trimLeft("global ", 1L);
-    auto p = s.trim("variable ", ")", 1L).split("(", 1L);
+    auto p = s.trim("variable ", ")", 1L).split("(", 1L).strip();
     setVariable(p(0), evaluate(p(1)), global);
     return true;
   }

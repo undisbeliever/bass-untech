@@ -9,15 +9,15 @@
 
 #include <nall/main.hpp>
 auto nall::main(string_vector args) -> void {
-  if(args.size() == 1) {
-    print(stderr, "bass v14.07\n");
-    print(stderr, "usage: bass [options] [-o target] source [source ...]\n");
+  if(args.size() < 3 || (args[1] != "create" && args[1] != "modify")) {
+    print(stderr, "bass v14.08\n");
+    print(stderr, "usage: bass (create|modify) [options] source [source ...]\n");
     print(stderr, "\n");
     print(stderr, "options:\n");
+    print(stderr, "  -o target        specify default output filename\n");
     print(stderr, "  -d name[=value]  create define with optional value\n");
     print(stderr, "  -c name[=value]  create constant with optional value\n");
     print(stderr, "  -strict          upgrade warnings to errors\n");
-    print(stderr, "  -create          overwrite target file if it already exists\n");
     print(stderr, "  -benchmark       benchmark performance\n");
     exit(EXIT_FAILURE);
   }
@@ -25,12 +25,12 @@ auto nall::main(string_vector args) -> void {
   string targetFilename;
   string_vector defines;
   string_vector constants;
+  bool create = args[1] == "create";
   bool strict = false;
-  bool create = false;
   bool benchmark = false;
   string_vector sourceFilenames;
 
-  for(uint n = 1; n < args.size();) {
+  for(uint n = 2; n < args.size();) {
     string s = args[n];
 
     if(s == "-o") {
@@ -53,12 +53,6 @@ auto nall::main(string_vector args) -> void {
 
     if(s == "-strict") {
       strict = true;
-      n += 1;
-      continue;
-    }
-
-    if(s == "-create") {
-      create = true;
       n += 1;
       continue;
     }
