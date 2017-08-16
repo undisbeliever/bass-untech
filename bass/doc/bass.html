@@ -46,7 +46,7 @@
     </style>
   </head>
   <body>
-    <h1>bass v14.06</h1>
+    <h1>bass v14.07</h1>
     Author: byuu<br>
     License: GPLv3<br>
     <br>
@@ -117,8 +117,8 @@
     be invoked recursively to load in nested source files.</p>
 
     <h3>Names</h3>
-    <p>Macros, defines, scopes, variables and constants must be in the following
-    format:</p>
+    <p>Macros, functions, defines, variables and constants must be in the
+    following format:</p>
     <pre>
     [_A-Za-z][_A-Za-z0-9.]*
     </pre>
@@ -165,7 +165,7 @@
 
     <h2>Execution</h2>
     <p>Execution acts much like a scripting language. Statements are evaluated
-    and a control flow (stack) is maintained.</p>
+    and a control flow (stack frame) is maintained.</p>
 
     <h3>Defines</h3>
     <p>Defines can be used to substitute values in expressions. The
@@ -247,16 +247,16 @@
     macros cannot appear inside expressions: the macro invocation must be the
     entire statement.</p>
 
-    <h4>Stack</h4>
-    <p>Every time a macro is invoked, a new object stack is created, which will
-    supercede all previous stacks. All macro arguments, as well as any objects
-    declared inside of said macro, are appended to the new stack. When the macro
-    completes execution, said stack is destroyed, and said objects are lost.
-    Note that this does not apply to constants, which must always be placed in
-    the global scope to support forward-declarations.</p>
+    <h4>Stack Frame</h4>
+    <p>Every time a macro is invoked, a new object stack frame is created, which
+    will supercede all previous stack frames. All macro arguments, as well as
+    any objects declared inside of said macro, are appended to the new frame.
+    When the macro completes execution, said frame is destroyed, and said
+    objects are lost. Note that this does not apply to constants, which must
+    always be placed in the global scope to support forward-declarations.</p>
 
-    <p>It is however possible to access the global define scope by prefixing
-    object creation with the <i>global</i> keyword, for example:</p>
+    <p>It is however possible to access the global frame by prefixing object
+    creation with the <i>global</i> keyword, for example:</p>
 
     <pre>
     macro square(value) {
@@ -266,6 +266,25 @@
     square(16)
     print "{result}\n"&nbsp; //prints 256
     </pre>
+
+    <h3>Inline Macros</h3>
+    <p>Macros can also be created without a stack frame, which will cause any
+    objects created inside of them to appear in the same frame as the macro was
+    invoked in. For example:</p>
+
+    <pre>
+    inline square(value) {
+    &nbsp;&nbsp;evaluate result({value} * {value})
+    }
+
+    function main {
+    &nbsp;&nbsp;square(16)
+    }
+
+    print main.result, "\n"  //prints 256
+    </pre>
+
+    <p>This is obviously not a good idea to use for recursive macros.</p>
 
     <h3>Conditional Expressions</h3>
     <p>bass supports traditional conditional expressions.</p>
@@ -365,22 +384,6 @@
     lda #information.length  //32
     </pre>
 
-    <h3>Scoped Macros</h3>
-    <p>Macros are always automatically scoped, as they create their own stack
-    frames for defines, variables, and other macros. You will need to use the
-    global prefix to access defines and variables outside of the macro.</p>
-
-    <h4>Example:</h4>
-    <pre>
-    macro context() {
-    &nbsp;&nbsp;global variable value(32)
-    }
-
-    context()  //macro must be executed to create the variable
-
-    print context.value
-    </pre>
-
     <h3>Scoped Labels</h3>
     <p>It is possible to declare a scope and label at the same time, which is a
     useful way to mark functions and their boundaries.</p>
@@ -443,7 +446,7 @@
     command allows mapping file address space into a virtual memory address
     space.</p>
 
-    <h3>(push|pull) variable [, ...]</h3>
+    <h3>(enqueue|dequeue) variable [, ...]</h3>
     <p>This can be used to save and restore internal state. Currently supported
     values are: <i>origin, base, pc</i>.</p>
 
@@ -518,10 +521,13 @@
     <h3>pc()</h3>
     <p>Returns the current program counter (origin + base.)</p>
 
-    <h3>putchar(value)</h3>
+    <h3>print_char(value)</h3>
     <p>Writes the specified character to the terminal, and returns the value of
-    the printed character. Useful for implementing specialized print functions,
-    such as printing hex values.</p>
+    the printed character.</p>
+
+    <h3>print_hex(value)</h3>
+    <p>Like print_char, but prints hex values instead. Note that hex values are
+    unadorned and unpadded, eg print_hex(4095) will simply print fff.</p>
 
     <h2>The End</h2>
     <p>Hopefully this has been informative. The best way to learn is through

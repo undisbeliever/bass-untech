@@ -1,13 +1,12 @@
 auto Bass::execute() -> bool {
-  stackFrame.reset();
-  ifStack.reset();
+  frames.reset();
+  conditionals.reset();
   ip = 0;
   macroInvocationCounter = 0;
 
   initialize();
 
-  StackFrame frame;
-  stackFrame.append(frame);
+  frames.append({0, false});
   for(auto& define : defines) {
     setDefine(define.name, define.value, true);
   }
@@ -17,7 +16,7 @@ auto Bass::execute() -> bool {
     if(!executeInstruction(i)) error("unrecognized directive: ", i.statement);
   }
 
-  stackFrame.removeRight();
+  frames.removeRight();
   return true;
 }
 
@@ -27,44 +26,57 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
   evaluateDefines(s);
 
   if(s.match("macro ?*(*) {") || s.match("global macro ?*(*) {")) {
-    bool local = s.beginsWith("global ") == false;
-    if(!local) s.trimLeft("global ", 1L);
+    bool inlined = false;
+    bool global = s.beginsWith("global ");
+    if(global) s.trimLeft("global ", 1L);
     s.trim("macro ", ") {", 1L);
     auto p = s.split("(", 1L);
     auto a = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
-    setMacro(p(0), a, ip, local);
+    setMacro(p(0), a, ip, inlined, global);
+    ip = i.ip;
+    return true;
+  }
+
+  if(s.match("inline ?*(*) {") || s.match("global inline ?*(*) {")) {
+    bool inlined = true;
+    bool global = s.beginsWith("global ");
+    if(global) s.trimLeft("global ", 1L);
+    s.trim("inline ", ") {", 1L);
+    auto p = s.split("(", 1L);
+    auto a = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
+    setMacro(p(0), a, ip, inlined, global);
     ip = i.ip;
     return true;
   }
 
   if(s.match("define ?*(*)") || s.match("global define ?*(*)")) {
-    bool local = s.beginsWith("global ") == false;
-    if(!local) s.trimLeft("global ", 1L);
+    bool global = s.beginsWith("global ");
+    if(global) s.trimLeft("global ", 1L);
     auto p = s.trim("define ", ")", 1L).split("(", 1L);
-    setDefine(p(0), p(1), local);
+    setDefine(p(0), p(1), global);
     return true;
   }
 
   if(s.match("evaluate ?*(*)") || s.match("global evaluate ?*(*)")) {
-    bool local = s.beginsWith("global ") == false;
-    if(!local) s.trimLeft("global ", 1L);
+    bool global = s.beginsWith("global ");
+    if(global) s.trimLeft("global ", 1L);
     auto p = s.trim("evaluate ", ")", 1L).split("(", 1L);
-    setDefine(p(0), evaluate(p(1)), local);
+    setDefine(p(0), evaluate(p(1)), global);
     return true;
   }
 
   if(s.match("variable ?*(*)") || s.match("global variable ?*(*)")) {
-    bool local = s.beginsWith("global ") == false;
-    if(!local) s.trimLeft("global ", 1L);
+    bool global = s.beginsWith("global ");
+    if(global) s.trimLeft("global ", 1L);
     auto p = s.trim("variable ", ")", 1L).split("(", 1L);
-    setVariable(p(0), evaluate(p(1)), local);
+    setVariable(p(0), evaluate(p(1)), global);
     return true;
   }
 
   if(s.match("if ?* {")) {
     s.trim("if ", " {", 1L).strip();
     bool match = evaluate(s, Evaluation::Strict);
-    ifStack.append(match);
+    conditionals.append(match);
     if(match == false) {
       ip = i.ip;
     }
@@ -72,12 +84,12 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
   }
 
   if(s.match("} else if ?* {")) {
-    if(ifStack.right()) {
+    if(conditionals.right()) {
       ip = i.ip;
     } else {
       s.trim("} else if ", " {", 1L).strip();
       bool match = evaluate(s, Evaluation::Strict);
-      ifStack.right() = match;
+      conditionals.right() = match;
       if(match == false) {
         ip = i.ip;
       }
@@ -86,16 +98,16 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
   }
 
   if(s.match("} else {")) {
-    if(ifStack.right()) {
+    if(conditionals.right()) {
       ip = i.ip;
     } else {
-      ifStack.right() = true;
+      conditionals.right() = true;
     }
     return true;
   }
 
   if(s.match("} endif")) {
-    ifStack.removeRight();
+    conditionals.removeRight();
     return true;
   }
 
@@ -134,16 +146,13 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
         else error("unsupported parameter type: ", p(0));
       }
 
-      StackFrame frame;
-      stackFrame.append(frame);
-      stackFrame.right().ip = ip;
+      frames.append({ip, macro().inlined});
+      if(!frames.right().inlined) scope.append(p(0));
 
-      scope.append(p(0));
-
-      setDefine("#", {"_", macroInvocationCounter++}, true);
+      setDefine("#", {"_", macroInvocationCounter++}, false);
       for(auto& parameter : parameters) {
-        if(parameter.type == Parameter::Type::Define) setDefine(parameter.name, parameter.value, true);
-        if(parameter.type == Parameter::Type::Variable) setVariable(parameter.name, parameter.value.integer(), true);
+        if(parameter.type == Parameter::Type::Define) setDefine(parameter.name, parameter.value, false);
+        if(parameter.type == Parameter::Type::Variable) setVariable(parameter.name, parameter.value.integer(), false);
       }
 
       ip = macro().ip;
@@ -151,10 +160,10 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
     }
   }
 
-  if(s.match("} endmacro")) {
-    ip = stackFrame.right().ip;
-    scope.removeRight();
-    stackFrame.removeRight();
+  if(s.match("} endmacro") || s.match("} endinline")) {
+    ip = frames.right().ip;
+    if(!frames.right().inlined) scope.removeRight();
+    frames.removeRight();
     return true;
   }
 

@@ -70,8 +70,12 @@ auto Bass::evaluateFunction(Eval::Node* node, Evaluation mode) -> int64_t {
   if(s == "origin:0") return origin;
   if(s == "base:0") return base;
   if(s == "pc:0") return pc();
-  if(s == "putchar:1") {
-    if(writePhase()) print((char)p[0]);
+  if(s == "print_char:1") {
+    if(writePhase()) print(stderr, (char)p[0]);
+    return p[0];
+  }
+  if(s == "print_hex:1") {
+    if(writePhase()) print(stderr, hex(p[0]));
     return p[0];
   }
 

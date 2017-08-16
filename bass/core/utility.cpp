@@ -1,118 +1,118 @@
-auto Bass::setMacro(const string& name, const string_vector& parameters, uint ip, bool local) -> void {
-  if(stackFrame.size() == 0) return;
-  auto& macros = stackFrame[local ? stackFrame.size() - 1 : 0].macros;
+auto Bass::setMacro(const string& name, const string_vector& parameters, uint ip, bool inlined, bool global) -> void {
+  string scopedName = {scope.merge("."), scope ? "." : "", name, ":", parameters.size()};
 
-  string scopedName = {name, ":", parameters.size()};
-  if(scope.size() && local) scopedName = {scope.merge("."), ".", scopedName};
+  for(int n : rrange(frames.size())) {
+    if(global && n) continue;
+    if(frames[n].inlined) continue;
 
-  if(auto macro = macros.find({scopedName})) {
-    macro().parameters = parameters;
-    macro().ip = ip;
-  } else {
-    macros.insert({scopedName, parameters, ip});
-  }
-}
-
-auto Bass::findMacro(const string& name, bool local) -> maybe<Macro&> {
-  if(stackFrame.size() == 0) return nothing;
-  auto& macros = stackFrame[local ? stackFrame.size() - 1 : 0].macros;
-
-  auto s = scope;
-  while(true) {
-    string scopedName = {s.merge("."), s.size() ? "." : "", name};
+    auto& macros = frames[n].macros;
     if(auto macro = macros.find({scopedName})) {
-      return macro();
+      macro().parameters = parameters;
+      macro().ip = ip;
+      macro().inlined = inlined;
+    } else {
+      macros.insert({scopedName, parameters, ip, inlined});
     }
-    if(!s) break;
-    s.removeRight();
-  }
 
-  return nothing;
+    return;
+  }
 }
 
 auto Bass::findMacro(const string& name) -> maybe<Macro&> {
-  if(auto macro = findMacro(name, true)) return macro();
-  if(auto macro = findMacro(name, false)) return macro();
-  return nothing;
-}
+  for(int n : rrange(frames.size())) {
+    if(frames[n].inlined) continue;
 
-auto Bass::setDefine(const string& name, const string& value, bool local) -> void {
-  if(stackFrame.size() == 0) return;
-  auto& defines = stackFrame[local ? stackFrame.size() - 1 : 0].defines;
-
-  string scopedName = name;
-  if(scope.size() && local) scopedName = {scope.merge("."), ".", name};
-
-  if(auto define = defines.find({scopedName})) {
-    define().value = value;
-  } else {
-    defines.insert({scopedName, value});
-  }
-}
-
-auto Bass::findDefine(const string& name, bool local) -> maybe<Define&> {
-  if(stackFrame.size() == 0) return nothing;
-  auto& defines = stackFrame[local ? stackFrame.size() - 1 : 0].defines;
-
-  auto s = scope;
-  while(true) {
-    string scopedName = {s.merge("."), s.size() ? "." : "", name};
-    if(auto define = defines.find({scopedName})) {
-      return define();
+    auto& macros = frames[n].macros;
+    auto s = scope;
+    while(true) {
+      string scopedName = {s.merge("."), s ? "." : "", name};
+      if(auto macro = macros.find({scopedName})) {
+        return macro();
+      }
+      if(!s) break;
+      s.removeRight();
     }
-    if(!s) break;
-    s.removeRight();
   }
 
   return nothing;
+}
+
+auto Bass::setDefine(const string& name, const string& value, bool global) -> void {
+  string scopedName = {scope.merge("."), scope ? "." : "", name};
+
+  for(int n : rrange(frames.size())) {
+    if(global && n) continue;
+    if(frames[n].inlined) continue;
+
+    auto& defines = frames[n].defines;
+    if(auto define = defines.find({scopedName})) {
+      define().value = value;
+    } else {
+      defines.insert({scopedName, value});
+    }
+
+    return;
+  }
 }
 
 auto Bass::findDefine(const string& name) -> maybe<Define&> {
-  if(auto define = findDefine(name, true)) return define();
-  if(auto define = findDefine(name, false)) return define();
-  return nothing;
-}
+  for(int n : rrange(frames.size())) {
+    if(frames[n].inlined) continue;
 
-auto Bass::setVariable(const string& name, int64_t value, bool local) -> void {
-  if(stackFrame.size() == 0) return;
-  auto& variables = stackFrame[local ? stackFrame.size() - 1 : 0].variables;
-
-  string scopedName = name;
-  if(scope.size() && local) scopedName = {scope.merge("."), ".", name};
-
-  if(auto variable = variables.find({scopedName})) {
-    variable().value = value;
-  } else {
-    variables.insert({scopedName, value});
-  }
-}
-
-auto Bass::findVariable(const string& name, bool local) -> maybe<Variable&> {
-  if(stackFrame.size() == 0) return nothing;
-  auto& variables = stackFrame[local ? stackFrame.size() - 1 : 0].variables;
-
-  auto s = scope;
-  while(true) {
-    string scopedName = {s.merge("."), s.size() ? "." : "", name};
-    if(auto variable = variables.find({scopedName})) {
-      return variable();
+    auto& defines = frames[n].defines;
+    auto s = scope;
+    while(true) {
+      string scopedName = {s.merge("."), s ? "." : "", name};
+      if(auto define = defines.find({scopedName})) {
+        return define();
+      }
+      if(!s) break;
+      s.removeRight();
     }
-    if(!s) break;
-    s.removeRight();
   }
 
   return nothing;
+}
+
+auto Bass::setVariable(const string& name, int64_t value, bool global) -> void {
+  string scopedName = {scope.merge("."), scope ? "." : "", name};
+
+  for(int n : rrange(frames.size())) {
+    if(global && n) continue;
+    if(frames[n].inlined) continue;
+
+    auto& variables = frames[n].variables;
+    if(auto variable = variables.find({scopedName})) {
+      variable().value = value;
+    } else {
+      variables.insert({scopedName, value});
+    }
+
+    return;
+  }
 }
 
 auto Bass::findVariable(const string& name) -> maybe<Variable&> {
-  if(auto variable = findVariable(name, true)) return variable();
-  if(auto variable = findVariable(name, false)) return variable();
+  for(int n : rrange(frames.size())) {
+    if(frames[n].inlined) continue;
+
+    auto& variables = frames[n].variables;
+    auto s = scope;
+    while(true) {
+      string scopedName = {s.merge("."), s ? "." : "", name};
+      if(auto variable = variables.find({scopedName})) {
+        return variable();
+      }
+      if(!s) break;
+      s.removeRight();
+    }
+  }
+
   return nothing;
 }
 
 auto Bass::setConstant(const string& name, int64_t value) -> void {
-  string scopedName = name;
-  if(scope.size()) scopedName = {scope.merge("."), ".", name};
+  string scopedName = {scope.merge("."), scope ? "." : "", name};
 
   if(auto constant = constants.find({scopedName})) {
     if(queryPhase()) error("constant cannot be modified: ", scopedName);
@@ -125,7 +125,7 @@ auto Bass::setConstant(const string& name, int64_t value) -> void {
 auto Bass::findConstant(const string& name) -> maybe<Constant&> {
   auto s = scope;
   while(true) {
-    string scopedName = {s.merge("."), s.size() ? "." : "", name};
+    string scopedName = {s.merge("."), s ? "." : "", name};
     if(auto constant = constants.find({scopedName})) {
       return constant();
     }

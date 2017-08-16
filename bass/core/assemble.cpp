@@ -1,5 +1,5 @@
 auto Bass::initialize() -> void {
-  pushStack.reset();
+  queue.reset();
   scope.reset();
   for(uint n : range(256)) stringTable[n] = n;
   endian = Endian::LSB;
@@ -19,27 +19,6 @@ auto Bass::assemble(const string& statement) -> bool {
   if(s.match("constant ?*(*)")) {
     auto p = s.trim("constant ", ")", 1L).split("(", 1L);
     setConstant(p(0), evaluate(p(1)));
-    return true;
-  }
-
-  //namespace name {
-  if(s.match("namespace ?* {")) {
-    s.trim("namespace ", "{", 1L).strip();
-    scope.append(s);
-    return true;
-  }
-
-  //function name {
-  if(s.match("function ?* {")) {
-    s.trim("function ", "{", 1L).strip();
-    setConstant(s, pc());
-    scope.append(s);
-    return true;
-  }
-
-  //} namespace or } function
-  if(s.match("} endscope")) {
-    scope.removeRight();
     return true;
   }
 
@@ -63,8 +42,35 @@ auto Bass::assemble(const string& statement) -> bool {
     return true;
   }
 
-  //} block
+  //}
   if(s.match("} endconstant")) {
+    return true;
+  }
+
+  //namespace name {
+  if(s.match("namespace ?* {")) {
+    s.trim("namespace ", "{", 1L).strip();
+    scope.append(s);
+    return true;
+  }
+
+  //}
+  if(s.match("} endnamespace")) {
+    scope.removeRight();
+    return true;
+  }
+
+  //function name {
+  if(s.match("function ?* {")) {
+    s.trim("function ", "{", 1L).strip();
+    setConstant(s, pc());
+    scope.append(s);
+    return true;
+  }
+
+  //}
+  if(s.match("} endfunction")) {
+    scope.removeRight();
     return true;
   }
 
@@ -100,39 +106,39 @@ auto Bass::assemble(const string& statement) -> bool {
     return true;
   }
 
-  //push variable [, ...]
-  if(s.match("push ?*")) {
-    auto p = s.trimLeft("push ", 1L).qsplit(",").strip();
+  //enqueue variable [, ...]
+  if(s.match("enqueue ?*")) {
+    auto p = s.trimLeft("enqueue ", 1L).qsplit(",").strip();
     for(auto& t : p) {
       if(t == "origin") {
-        pushStack.append(origin);
+        queue.append(origin);
       } else if(t == "base") {
-        pushStack.append(base);
+        queue.append(base);
       } else if(t == "pc") {
-        pushStack.append(origin);
-        pushStack.append(base);
+        queue.append(origin);
+        queue.append(base);
       } else {
-        error("unrecognized push variable: ", t);
+        error("unrecognized enqueue variable: ", t);
       }
     }
     return true;
   }
 
-  //pull variable [, ...]
-  if(s.match("pull ?*")) {
-    auto p = s.trimLeft("pull ", 1L).qsplit(",").strip();
+  //dequeue variable [, ...]
+  if(s.match("dequeue ?*")) {
+    auto p = s.trimLeft("dequeue ", 1L).qsplit(",").strip();
     for(auto& t : p) {
       if(t == "origin") {
-        origin = pushStack.takeRight().natural();
+        origin = queue.takeRight().natural();
         seek(origin);
       } else if(t == "base") {
-        base = pushStack.takeRight().integer();
+        base = queue.takeRight().integer();
       } else if(t == "pc") {
-        base = pushStack.takeRight().integer();
-        origin = pushStack.takeRight().natural();
+        base = queue.takeRight().integer();
+        origin = queue.takeRight().natural();
         seek(origin);
       } else {
-        error("unrecognized pull variable: ", t);
+        error("unrecognized dequeue variable: ", t);
       }
     }
     return true;

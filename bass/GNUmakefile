@@ -13,8 +13,8 @@ obj/bass.o: bass.cpp bass.hpp $(call rwildcard,core/) $(call rwildcard,arch/)
 	$(compiler) $(cppflags) $(flags) -o obj/bass.o -c bass.cpp
 
 clean:
-	$(call delete,obj/*)
-	$(call delete,out/*)
+	-@$(call delete,obj/*)
+	-@$(call delete,out/*)
 
 install:
 	if [ -f out/$(name) ]; then cp out/$(name) $(prefix)/bin/$(name); fi

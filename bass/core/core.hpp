@@ -22,7 +22,7 @@ protected:
   struct Macro {
     Macro() {}
     Macro(const string& name) : name(name) {}
-    Macro(const string& name, const string_vector& parameters, uint ip) : name(name), parameters(parameters), ip(ip) {}
+    Macro(const string& name, const string_vector& parameters, uint ip, bool inlined) : name(name), parameters(parameters), ip(ip), inlined(inlined) {}
 
     auto hash() const -> uint { return name.hash(); }
     auto operator==(const Macro& source) const -> bool { return name == source.name; }
@@ -31,6 +31,7 @@ protected:
     string name;
     string_vector parameters;
     uint ip;
+    bool inlined;
   };
 
   struct Define {
@@ -61,15 +62,16 @@ protected:
 
   using Constant = Variable;  //Variable and Constant structures are identical
 
-  struct StackFrame {
+  struct Frame {
     uint ip;
+    bool inlined;
 
     hashset<Macro> macros;
     hashset<Define> defines;
     hashset<Variable> variables;
   };
 
-  struct BlockStack {
+  struct Block {
     uint ip;
     string type;
   };
@@ -109,16 +111,13 @@ protected:
   virtual auto assemble(const string& statement) -> bool;
 
   //utility.cpp
-  auto setMacro(const string& name, const string_vector& parameters, uint ip, bool local) -> void;
-  auto findMacro(const string& name, bool local) -> maybe<Macro&>;
+  auto setMacro(const string& name, const string_vector& parameters, uint ip, bool inlined, bool global) -> void;
   auto findMacro(const string& name) -> maybe<Macro&>;
 
-  auto setDefine(const string& name, const string& value, bool local) -> void;
-  auto findDefine(const string& name, bool local) -> maybe<Define&>;
+  auto setDefine(const string& name, const string& value, bool global) -> void;
   auto findDefine(const string& name) -> maybe<Define&>;
 
-  auto setVariable(const string& name, int64_t value, bool local) -> void;
-  auto findVariable(const string& name, bool local) -> maybe<Variable&>;
+  auto setVariable(const string& name, int64_t value, bool global) -> void;
   auto findVariable(const string& name) -> maybe<Variable&>;
 
   auto setConstant(const string& name, int64_t value) -> void;
@@ -133,12 +132,12 @@ protected:
   //internal state
   Instruction* activeInstruction = nullptr;  //used by notice, warning, error
   vector<Instruction> program;    //parsed source code statements
-  vector<BlockStack> blockStack;  //track the start and end of blocks
+  vector<Block> blocks;           //track the start and end of blocks
   set<Define> defines;            //defines specified on the terminal
   hashset<Constant> constants;    //constants support forward-declaration
-  vector<StackFrame> stackFrame;  //macros, defines and variables do not
-  vector<bool> ifStack;           //track conditional matching
-  string_vector pushStack;        //track push, pull directives
+  vector<Frame> frames;           //macros, defines and variables do not
+  vector<bool> conditionals;      //track conditional matching
+  string_vector queue;            //track enqueue, dequeue directives
   string_vector scope;            //track scope recursion
   int64_t stringTable[256];       //overrides for d[bwldq] text strings
   Phase phase;                    //phase of assembly
