@@ -67,21 +67,11 @@ auto Bass::evaluateParameters(Eval::Node* node, Evaluation mode) -> vector<int64
 auto Bass::evaluateExpression(Eval::Node* node, Evaluation mode) -> int64_t {
   auto parameters = evaluateParameters(node->link[1], mode);
   string name = node->link[0]->literal;
-  if(parameters) name.append(":", parameters.size());
+  if(parameters) name.append("#", parameters.size());
 
   if(name == "origin") return origin;
   if(name == "base") return base;
   if(name == "pc") return pc();
-
-  if(name == "print_char:1") {
-    if(writePhase()) print(stderr, (char)parameters[0]);
-    return parameters[0];
-  }
-
-  if(name == "print_hex:1") {
-    if(writePhase()) print(stderr, hex(parameters[0]));
-    return parameters[0];
-  }
 
   if(auto expression = findExpression(name)) {
     if(parameters) frames.append({0, true});
@@ -122,5 +112,5 @@ auto Bass::evaluateAssign(Eval::Node* node, Evaluation mode) -> int64_t {
     return variable().value;
   }
 
-  error("unrecognized variable");
+  error("unrecognized variable assignment: ", s);
 }

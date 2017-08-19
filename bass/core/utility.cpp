@@ -1,7 +1,7 @@
 auto Bass::setMacro(const string& name, const string_vector& parameters, uint ip, bool inlined, Frame::Level level) -> void {
   if(!validate(name)) error("invalid macro identifier: ", name);
   string scopedName = {scope.merge("."), scope ? "." : "", name};
-  if(parameters) scopedName.append(":", parameters.size());
+  if(parameters) scopedName.append("#", parameters.size());
 
   for(int n : rrange(frames.size())) {
     if(level != Frame::Level::Inline) {
@@ -41,9 +41,9 @@ auto Bass::findMacro(const string& name) -> maybe<Macro&> {
 }
 
 auto Bass::setDefine(const string& name, const string_vector& parameters, const string& value, Frame::Level level) -> void {
-  if(!validate(name) && name != "#") error("invalid define identifier: ", name);
+  if(!validate(name)) error("invalid define identifier: ", name);
   string scopedName = {scope.merge("."), scope ? "." : "", name};
-  if(parameters) scopedName.append(":", parameters.size());
+  if(parameters) scopedName.append("#", parameters.size());
 
   for(int n : rrange(frames.size())) {
     if(level != Frame::Level::Inline) {
@@ -84,7 +84,7 @@ auto Bass::findDefine(const string& name) -> maybe<Define&> {
 auto Bass::setExpression(const string& name, const string_vector& parameters, const string& value, Frame::Level level) -> void {
   if(!validate(name)) error("invalid expression identifier: ", name);
   string scopedName = {scope.merge("."), scope ? "." : "", name};
-  if(parameters) scopedName.append(":", parameters.size());
+  if(parameters) scopedName.append("#", parameters.size());
 
   for(int n : rrange(frames.size())) {
     if(level != Frame::Level::Inline) {
@@ -201,9 +201,9 @@ auto Bass::evaluateDefines(string& s) -> void {
       if(name.match("?*(*)")) {
         auto p = name.trimRight(")", 1L).split("(", 1L).strip();
         name = p(0);
-        if(p(1)) parameters = p(1).qsplit(",").strip();
+        parameters = split(p(1));
       }
-      if(parameters) name.append(":", parameters.size());
+      if(parameters) name.append("#", parameters.size());
 
       if(auto define = findDefine(name)) {
         if(parameters) frames.append({0, true});
@@ -231,12 +231,31 @@ auto Bass::filepath() -> string {
   return Location::path(sourceFilenames[activeInstruction->fileNumber]);
 }
 
+//split argument list by commas, being aware of parenthesis depth and quotes
+auto Bass::split(const string& s) -> string_vector {
+  string_vector result;
+  uint offset = 0;
+  bool quoted = false;
+  uint depth = 0;
+  for(uint n : range(s.size())) {
+    if(s[n] == '"' || s[n] == '\'') quoted = !quoted;
+    if(s[n] == '(' && !quoted) depth++;
+    if(s[n] == ')' && !quoted) depth--;
+    if(s[n] == ',' && !quoted && !depth) {
+      result.append(slice(s, offset, n - offset));
+      offset = n + 1;
+    }
+  }
+  if(offset < s.size()) result.append(slice(s, offset, s.size() - offset));
+  return result.strip();
+}
+
 //reduce all duplicate whitespace segments (eg "  ") to single whitespace (" ")
 auto Bass::strip(string& s) -> void {
   uint offset = 0;
   bool quoted = false;
   for(uint n : range(s.size())) {
-    if(s[n] == '"') quoted = !quoted;
+    if(s[n] == '"' || s[n] == '\'') quoted = !quoted;
     if(!quoted && s[n] == ' ' && s[n + 1] == ' ') continue;
     s.get()[offset++] = s[n];
   }
@@ -247,11 +266,11 @@ auto Bass::strip(string& s) -> void {
 auto Bass::validate(const string& s) -> bool {
   for(uint n : range(s.size())) {
     char c = s[n];
-    if(c == '_') continue;
-    if(c == '.' && n) continue;
+    if(c == '_' || c == '#') continue;
     if(c >= 'A' && c <= 'Z') continue;
     if(c >= 'a' && c <= 'z') continue;
     if(c >= '0' && c <= '9' && n) continue;
+    if(c == '.' && n) continue;
     return false;
   }
   return true;
@@ -262,6 +281,7 @@ auto Bass::text(string s) -> string {
   s.trim("\"", "\"", 1L);
   s.replace("\\s", "\'");
   s.replace("\\d", "\"");
+  s.replace("\\c", ",");
   s.replace("\\b", ";");
   s.replace("\\n", "\n");
   s.replace("\\\\", "\\");
@@ -275,6 +295,7 @@ auto Bass::character(const string& s) -> int64_t {
   if(s[1] != '\\') goto unknown;
   if(s[2] == 's') return '\'';
   if(s[2] == 'd') return '\"';
+  if(s[2] == 'c') return ',';
   if(s[2] == 'b') return ';';
   if(s[2] == 'n') return '\n';
   if(s[2] == '\\') return '\\';

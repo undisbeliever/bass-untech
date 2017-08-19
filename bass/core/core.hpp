@@ -88,7 +88,7 @@ struct Bass {
     string type;
   };
 
-protected:
+//protected:
   auto analyzePhase() const -> bool { return phase == Phase::Analyze; }
   auto queryPhase() const -> bool { return phase == Phase::Query; }
   auto writePhase() const -> bool { return phase == Phase::Write; }
@@ -142,6 +142,7 @@ protected:
   auto evaluateDefines(string& statement) -> void;
 
   auto filepath() -> string;
+  auto split(const string& s) -> string_vector;
   auto strip(string& s) -> void;
   auto validate(const string& s) -> bool;
   auto text(string s) -> string;

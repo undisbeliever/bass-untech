@@ -37,8 +37,8 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
     bool inlined = false;
     s.trim("macro ", ") {", 1L);
     auto p = s.split("(", 1L).strip();
-    auto a = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
-    setMacro(p(0), a, ip, inlined, level);
+    auto parameters = split(p(1));
+    setMacro(p(0), parameters, ip, inlined, level);
     ip = i.ip;
     return true;
   }
@@ -47,8 +47,8 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
     bool inlined = true;
     s.trim("inline ", ") {", 1L);
     auto p = s.split("(", 1L).strip();
-    auto a = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
-    setMacro(p(0), a, ip, inlined, level);
+    auto parameters = split(p(1));
+    setMacro(p(0), parameters, ip, inlined, level);
     ip = i.ip;
     return true;
   }
@@ -56,8 +56,8 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
   if(s.match("define ?*(*)*")) {
     auto e = s.trimLeft("define ", 1L).split("=", 1L).strip();
     auto p = e(0).trimRight(")", 1L).split("(", 1L).strip();
-    auto a = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
-    setDefine(p(0), a, e(1), level);
+    auto parameters = split(p(1));
+    setDefine(p(0), parameters, e(1), level);
     return true;
   }
 
@@ -76,8 +76,8 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
   if(s.match("expression ?*(*)*")) {
     auto e = s.trimLeft("expression ", 1L).split("=", 1L).strip();
     auto p = e(0).trimRight(")", 1L).split("(", 1L).strip();
-    auto a = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
-    setExpression(p(0), a, e(1), level);
+    auto parameters = split(p(1));
+    setExpression(p(0), parameters, e(1), level);
     return true;
   }
 
@@ -141,9 +141,9 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
 
   if(s.match("?*(*)")) {
     auto p = string{s}.trimRight(")", 1L).split("(", 1L).strip();
-    auto parameters = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
-    string name = p(0);
-    if(parameters) name.append(":", parameters.size());
+    auto name = p(0);
+    auto parameters = split(p(1));
+    if(parameters) name.append("#", parameters.size());
     if(auto macro = findMacro({name})) {
       frames.append({ip, macro().inlined});
       if(!frames.right().inlined) scope.append(p(0));

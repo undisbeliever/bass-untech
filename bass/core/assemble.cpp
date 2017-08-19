@@ -77,7 +77,7 @@ auto Bass::assemble(const string& statement) -> bool {
 
   //output "filename" [, create]
   if(s.match("output ?*")) {
-    auto p = s.trimLeft("output ", 1L).qsplit(",").strip();
+    auto p = split(s.trimLeft("output ", 1L));
     string filename = {filepath(), p.take(0).trim("\"", "\"", 1L)};
     bool create = (p.size() && p(0) == "create");
     target(filename, create);
@@ -122,7 +122,7 @@ auto Bass::assemble(const string& statement) -> bool {
 
   //enqueue variable [, ...]
   if(s.match("enqueue ?*")) {
-    auto p = s.trimLeft("enqueue ", 1L).qsplit(",").strip();
+    auto p = split(s.trimLeft("enqueue ", 1L));
     for(auto& t : p) {
       if(t == "origin") {
         queue.append(origin);
@@ -140,7 +140,7 @@ auto Bass::assemble(const string& statement) -> bool {
 
   //dequeue variable [, ...]
   if(s.match("dequeue ?*")) {
-    auto p = s.trimLeft("dequeue ", 1L).qsplit(",").strip();
+    auto p = split(s.trimLeft("dequeue ", 1L));
     for(auto& t : p) {
       if(t == "origin") {
         origin = queue.takeRight().natural();
@@ -160,7 +160,7 @@ auto Bass::assemble(const string& statement) -> bool {
 
   //insert [name, ] filename [, offset] [, length]
   if(s.match("insert ?*")) {
-    auto p = s.trimLeft("insert ", 1L).qsplit(",").strip();
+    auto p = split(s.trimLeft("insert ", 1L));
     string name;
     if(!p(0).match("\"*\"")) name = p.take(0);
     if(!p(0).match("\"*\"")) error("missing filename");
@@ -182,7 +182,7 @@ auto Bass::assemble(const string& statement) -> bool {
 
   //fill length [, with]
   if(s.match("fill ?*")) {
-    auto p = s.trimLeft("fill ", 1L).qsplit(",").strip();
+    auto p = split(s.trimLeft("fill ", 1L));
     uint length = evaluate(p(0));
     uint byte = evaluate(p(1, "0"));
     while(length--) write(byte);
@@ -191,7 +191,7 @@ auto Bass::assemble(const string& statement) -> bool {
 
   //map 'char' [, value] [, length]
   if(s.match("map ?*")) {
-    auto p = s.trimLeft("map ", 1L).qsplit(",").strip();
+    auto p = split(s.trimLeft("map ", 1L));
     uint8_t index = evaluate(p(0));
     int64_t value = evaluate(p(1, "0"));
     int64_t length = evaluate(p(2, "1"));
@@ -210,7 +210,7 @@ auto Bass::assemble(const string& statement) -> bool {
   if(s.beginsWith("dq ")) dataLength = 8;
   if(dataLength) {
     s = slice(s, 3);  //remove prefix
-    auto p = s.qsplit(",").strip();
+    auto p = split(s);
     for(auto& t : p) {
       if(t.match("\"*\"")) {
         t = text(t);
@@ -222,14 +222,23 @@ auto Bass::assemble(const string& statement) -> bool {
     return true;
   }
 
-  //print ("string"|variable) [, ...]
+  //print ("string"|[cast:]variable) [, ...]
   if(s.match("print ?*")) {
     s.trimLeft("print ", 1L).strip();
     if(writePhase()) {
-      auto p = s.qsplit(",").strip();
+      auto p = split(s);
       for(auto& t : p) {
         if(t.match("\"*\"")) {
           print(stderr, text(t));
+        } else if(t.match("binary:?*")) {
+          t.trimLeft("binary:", 1L);
+          print(stderr, binary(evaluate(t)));
+        } else if(t.match("hex:?*")) {
+          t.trimLeft("hex:", 1L);
+          print(stderr, hex(evaluate(t)));
+        } else if(t.match("char:?*")) {
+          t.trimLeft("char:", 1L);
+          print(stderr, (char)evaluate(t));
         } else {
           print(stderr, evaluate(t));
         }
