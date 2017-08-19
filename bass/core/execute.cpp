@@ -8,7 +8,7 @@ auto Bass::execute() -> bool {
 
   frames.append({0, false});
   for(auto& define : defines) {
-    setDefine(define.name, define.value, true);
+    setDefine(define.name, define.value);
   }
 
   while(ip < program.size()) {
@@ -25,53 +25,53 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
   string s = i.statement;
   evaluateDefines(s);
 
-  if(s.match("macro ?*(*) {") || s.match("global macro ?*(*) {")) {
+  bool global = s.beginsWith("global ");
+  bool parent = s.beginsWith("parent ");
+  if(global && parent) error("multiple frame specifiers are not allowed");
+
+  Frame::Level level = Frame::Level::Active;
+  if(global) s.trimLeft("global ", 1L), level = Frame::Level::Global;
+  if(parent) s.trimLeft("parent ", 1L), level = Frame::Level::Parent;
+
+  if(s.match("macro ?*(*) {")) {
     bool inlined = false;
-    bool global = s.beginsWith("global ");
-    if(global) s.trimLeft("global ", 1L);
     s.trim("macro ", ") {", 1L);
     auto p = s.split("(", 1L).strip();
     auto a = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
-    setMacro(p(0), a, ip, inlined, global);
+    setMacro(p(0), a, ip, inlined, level);
     ip = i.ip;
     return true;
   }
 
-  if(s.match("inline ?*(*) {") || s.match("global inline ?*(*) {")) {
+  if(s.match("inline ?*(*) {")) {
     bool inlined = true;
-    bool global = s.beginsWith("global ");
-    if(global) s.trimLeft("global ", 1L);
     s.trim("inline ", ") {", 1L);
     auto p = s.split("(", 1L).strip();
     auto a = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
-    setMacro(p(0), a, ip, inlined, global);
+    setMacro(p(0), a, ip, inlined, level);
     ip = i.ip;
     return true;
   }
 
-  if(s.match("define ?*(*)") || s.match("global define ?*(*)")) {
-    bool global = s.beginsWith("global ");
-    if(global) s.trimLeft("global ", 1L);
+  if(s.match("define ?*(*)")) {
     auto p = s.trim("define ", ")", 1L).split("(", 1L).strip();
-    setDefine(p(0), p(1), global);
+    setDefine(p(0), p(1), level);
     return true;
   }
 
-  if(s.match("evaluate ?*(*)") || s.match("global evaluate ?*(*)")) {
-    bool global = s.beginsWith("global ");
-    if(global) s.trimLeft("global ", 1L);
+  if(s.match("evaluate ?*(*)")) {
     auto p = s.trim("evaluate ", ")", 1L).split("(", 1L).strip();
-    setDefine(p(0), evaluate(p(1)), global);
+    setDefine(p(0), evaluate(p(1)), level);
     return true;
   }
 
-  if(s.match("variable ?*(*)") || s.match("global variable ?*(*)")) {
-    bool global = s.beginsWith("global ");
-    if(global) s.trimLeft("global ", 1L);
+  if(s.match("variable ?*(*)")) {
     auto p = s.trim("variable ", ")", 1L).split("(", 1L).strip();
-    setVariable(p(0), evaluate(p(1)), global);
+    setVariable(p(0), evaluate(p(1)), level);
     return true;
   }
+
+  if(global || parent) error("invalid frame specifier");
 
   if(s.match("if ?* {")) {
     s.trim("if ", " {", 1L).strip();
@@ -149,10 +149,10 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
       frames.append({ip, macro().inlined});
       if(!frames.right().inlined) scope.append(p(0));
 
-      setDefine("#", {"_", macroInvocationCounter++, "_"}, false);
+      setDefine("#", {"_", macroInvocationCounter++, "_"});
       for(auto& parameter : parameters) {
-        if(parameter.type == Parameter::Type::Define) setDefine(parameter.name, parameter.value, false);
-        if(parameter.type == Parameter::Type::Variable) setVariable(parameter.name, parameter.value.integer(), false);
+        if(parameter.type == Parameter::Type::Define) setDefine(parameter.name, parameter.value);
+        if(parameter.type == Parameter::Type::Variable) setVariable(parameter.name, parameter.value.integer());
       }
 
       ip = macro().ip;

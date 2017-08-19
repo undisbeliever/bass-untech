@@ -1,10 +1,11 @@
-auto Bass::setMacro(const string& name, const string_vector& parameters, uint ip, bool inlined, bool global) -> void {
+auto Bass::setMacro(const string& name, const string_vector& parameters, uint ip, bool inlined, Frame::Level level) -> void {
   if(!validate(name)) error("invalid macro identifier: ", name);
   string scopedName = {scope.merge("."), scope ? "." : "", name, ":", parameters.size()};
 
   for(int n : rrange(frames.size())) {
-    if(global && n) continue;
     if(frames[n].inlined) continue;
+    if(level == Frame::Level::Global && n) { continue; }
+    if(level == Frame::Level::Parent && n) { level = Frame::Level::Active; continue; }
 
     auto& macros = frames[n].macros;
     if(auto macro = macros.find({scopedName})) {
@@ -38,13 +39,14 @@ auto Bass::findMacro(const string& name) -> maybe<Macro&> {
   return nothing;
 }
 
-auto Bass::setDefine(const string& name, const string& value, bool global) -> void {
+auto Bass::setDefine(const string& name, const string& value, Frame::Level level) -> void {
   if(!validate(name) && name != "#") error("invalid define identifier: ", name);
   string scopedName = {scope.merge("."), scope ? "." : "", name};
 
   for(int n : rrange(frames.size())) {
-    if(global && n) continue;
     if(frames[n].inlined) continue;
+    if(level == Frame::Level::Global && n) { continue; }
+    if(level == Frame::Level::Parent && n) { level = Frame::Level::Active; continue; }
 
     auto& defines = frames[n].defines;
     if(auto define = defines.find({scopedName})) {
@@ -76,13 +78,14 @@ auto Bass::findDefine(const string& name) -> maybe<Define&> {
   return nothing;
 }
 
-auto Bass::setVariable(const string& name, int64_t value, bool global) -> void {
+auto Bass::setVariable(const string& name, int64_t value, Frame::Level level) -> void {
   if(!validate(name)) error("invalid variable identifier: ", name);
   string scopedName = {scope.merge("."), scope ? "." : "", name};
 
   for(int n : rrange(frames.size())) {
-    if(global && n) continue;
     if(frames[n].inlined) continue;
+    if(level == Frame::Level::Global && n) { continue; }
+    if(level == Frame::Level::Parent && n) { level = Frame::Level::Active; continue; }
 
     auto& variables = frames[n].variables;
     if(auto variable = variables.find({scopedName})) {
@@ -168,7 +171,7 @@ auto Bass::filepath() -> string {
 auto Bass::strip(string& s) -> void {
   uint offset = 0;
   bool quoted = false;
-  for(int n = 0; n < s.size() - 1; n++) {
+  for(uint n : range(s.size())) {
     if(s[n] == '"') quoted = !quoted;
     if(!quoted && s[n] == ' ' && s[n + 1] == ' ') continue;
     s.get()[offset++] = s[n];
@@ -201,7 +204,7 @@ auto Bass::text(string s) -> string {
   return s;
 }
 
-auto Bass::character(string s) -> int64_t {
+auto Bass::character(const string& s) -> int64_t {
   if(s[0] != '\'') goto unknown;
   if(s[2] == '\'') return s[1];
   if(s[3] != '\'') goto unknown;

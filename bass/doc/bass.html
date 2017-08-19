@@ -46,7 +46,7 @@
     </style>
   </head>
   <body>
-    <h1>bass v14.09</h1>
+    <h1>bass v14.10</h1>
     Author: byuu<br>
     License: GPLv3<br>
     <br>
@@ -255,7 +255,7 @@
     any objects declared inside of said macro, are appended to the new frame.
     When the macro completes execution, said frame is destroyed, and said
     objects are lost. Note that this does not apply to constants, which must
-    always be placed in the global scope to support forward-declarations.</p>
+    always be placed in the global frame to support forward-declarations.</p>
 
     <p>It is however possible to access the global frame by prefixing object
     creation with the <i>global</i> keyword, for example:</p>
@@ -269,14 +269,31 @@
     print "{square.result}\n"&nbsp; //prints 256
     </pre>
 
-    <h3>Inline Macros</h3>
-    <p>Macros can also be created without a stack frame, which will cause any
-    objects created inside of them to appear in the same frame as the macro was
-    invoked in. For example:</p>
+    <p>Further, it is also possible to reference the parent frame by prefixing
+    object creation with the <i>parent</i> keyword, which is useful for
+    recursive macros, or to represent macro return values. For example:</p>
 
     <pre>
-    inline square(value) {
-    &nbsp;&nbsp;evaluate result({value} * {value})
+    macro factorial(variable n) {
+    &nbsp;&nbsp;parent variable result(1)
+    &nbsp;&nbsp;if n >= 1 {
+    &nbsp;&nbsp;&nbsp;&nbsp;factorial(n - 1)
+    &nbsp;&nbsp;&nbsp;&nbsp;parent variable result(n * factorial.result)
+    &nbsp;&nbsp;}
+    }
+
+    factorial(10)
+    print factorial.result, "\n"  //prints 3628800
+    </pre>
+
+    <h3>Inline Macros</h3>
+    <p>Macros can also be created without a stack frame by using the
+    <i>inline</i> keyword, which will cause any objects created inside of them
+    to appear in the same frame as the macro was invoked in. For example:</p>
+
+    <pre>
+    inline square(variable value) {
+    &nbsp;&nbsp;variable result(value * value)
     }
 
     function main {
@@ -451,7 +468,7 @@
     <p>The name is transformed to <i>name.arch</i>, and bass tries to find said
     file in two locations: first, in the <i>architectures/</i> subdirectory next
     to the main bass executable. And second, in
-    <i>~/.local/bass/architectures/</i> or
+    <i>~/.local/share/bass/architectures/</i> or
     <i>%localappdata%/bass/architectures/</i>, depending upon your OS.</p>
 
     <p>bass ships with a variety of pre-made table architecture files. On

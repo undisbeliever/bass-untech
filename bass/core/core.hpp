@@ -64,6 +64,8 @@ struct Bass {
   using Constant = Variable;  //Variable and Constant structures are identical
 
   struct Frame {
+    enum class Level : uint { Active, Parent, Global };
+
     uint ip;
     bool inlined;
 
@@ -113,13 +115,13 @@ protected:
   auto assemble(const string& statement) -> bool;
 
   //utility.cpp
-  auto setMacro(const string& name, const string_vector& parameters, uint ip, bool inlined, bool global) -> void;
+  auto setMacro(const string& name, const string_vector& parameters, uint ip, bool inlined, Frame::Level level = Frame::Level::Active) -> void;
   auto findMacro(const string& name) -> maybe<Macro&>;
 
-  auto setDefine(const string& name, const string& value, bool global) -> void;
+  auto setDefine(const string& name, const string& value, Frame::Level level = Frame::Level::Active) -> void;
   auto findDefine(const string& name) -> maybe<Define&>;
 
-  auto setVariable(const string& name, int64_t value, bool global) -> void;
+  auto setVariable(const string& name, int64_t value, Frame::Level level = Frame::Level::Active) -> void;
   auto findVariable(const string& name) -> maybe<Variable&>;
 
   auto setConstant(const string& name, int64_t value) -> void;
@@ -131,7 +133,7 @@ protected:
   auto strip(string& s) -> void;
   auto validate(const string& s) -> bool;
   auto text(string s) -> string;
-  auto character(string s) -> int64_t;
+  auto character(const string& s) -> int64_t;
 
   //internal state
   Instruction* activeInstruction = nullptr;  //used by notice, warning, error
