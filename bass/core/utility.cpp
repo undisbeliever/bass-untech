@@ -1,4 +1,5 @@
 auto Bass::setMacro(const string& name, const string_vector& parameters, uint ip, bool inlined, bool global) -> void {
+  if(!validate(name)) error("invalid macro identifier: ", name);
   string scopedName = {scope.merge("."), scope ? "." : "", name, ":", parameters.size()};
 
   for(int n : rrange(frames.size())) {
@@ -38,6 +39,7 @@ auto Bass::findMacro(const string& name) -> maybe<Macro&> {
 }
 
 auto Bass::setDefine(const string& name, const string& value, bool global) -> void {
+  if(!validate(name) && name != "#") error("invalid define identifier: ", name);
   string scopedName = {scope.merge("."), scope ? "." : "", name};
 
   for(int n : rrange(frames.size())) {
@@ -75,6 +77,7 @@ auto Bass::findDefine(const string& name) -> maybe<Define&> {
 }
 
 auto Bass::setVariable(const string& name, int64_t value, bool global) -> void {
+  if(!validate(name)) error("invalid variable identifier: ", name);
   string scopedName = {scope.merge("."), scope ? "." : "", name};
 
   for(int n : rrange(frames.size())) {
@@ -112,6 +115,7 @@ auto Bass::findVariable(const string& name) -> maybe<Variable&> {
 }
 
 auto Bass::setConstant(const string& name, int64_t value) -> void {
+  if(!validate(name)) error("invalid constant identifier: ", name);
   string scopedName = {scope.merge("."), scope ? "." : "", name};
 
   if(auto constant = constants.find({scopedName})) {
@@ -160,8 +164,34 @@ auto Bass::filepath() -> string {
   return Location::path(sourceFilenames[activeInstruction->fileNumber]);
 }
 
+//reduce all duplicate whitespace segments (eg "  ") to single whitespace (" ")
+auto Bass::strip(string& s) -> void {
+  uint offset = 0;
+  bool quoted = false;
+  for(int n = 0; n < s.size() - 1; n++) {
+    if(s[n] == '"') quoted = !quoted;
+    if(!quoted && s[n] == ' ' && s[n + 1] == ' ') continue;
+    s.get()[offset++] = s[n];
+  }
+  s.resize(offset);
+}
+
+//returns true for valid name identifiers
+auto Bass::validate(const string& s) -> bool {
+  for(uint n : range(s.size())) {
+    char c = s[n];
+    if(c == '_') continue;
+    if(c == '.' && n) continue;
+    if(c >= 'A' && c <= 'Z') continue;
+    if(c >= 'a' && c <= 'z') continue;
+    if(c >= '0' && c <= '9' && n) continue;
+    return false;
+  }
+  return true;
+}
+
 auto Bass::text(string s) -> string {
-  if(!s.match("\"*\"")) warning("string value is unqouted: ", s);
+  if(!s.match("\"*\"")) warning("string value is unquoted: ", s);
   s.trim("\"", "\"", 1L);
   s.replace("\\s", "\'");
   s.replace("\\d", "\"");

@@ -1,10 +1,8 @@
-struct BassTable : Bass {
-  using Bass::assemble;
+struct Table : Architecture {
+  Table(Bass& self, const string& table);
+  auto assemble(const string& statement) -> bool override;
 
-  virtual auto initialize() -> void override;
-  virtual auto assemble(const string& statement) -> bool override;
-
-protected:
+private:
   struct Prefix {
     string text;
     uint size;

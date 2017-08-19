@@ -1,3 +1,5 @@
+struct Architecture;
+
 struct Bass {
   auto target(const string& filename, bool create) -> bool;
   auto source(const string& filename) -> bool;
@@ -5,7 +7,6 @@ struct Bass {
   auto constant(const string& name, const string& value) -> void;
   auto assemble(bool strict = false) -> bool;
 
-protected:
   enum class Phase : uint { Analyze, Query, Write };
   enum class Endian : uint { LSB, MSB };
   enum class Evaluation : uint { Default = 0, Strict = 1 };  //strict mode disallows forward-declaration of constants
@@ -76,6 +77,7 @@ protected:
     string type;
   };
 
+protected:
   auto analyzePhase() const -> bool { return phase == Phase::Analyze; }
   auto queryPhase() const -> bool { return phase == Phase::Query; }
   auto writePhase() const -> bool { return phase == Phase::Write; }
@@ -107,8 +109,8 @@ protected:
   auto executeInstruction(Instruction& instruction) -> bool;
 
   //assemble.cpp
-  virtual auto initialize() -> void;
-  virtual auto assemble(const string& statement) -> bool;
+  auto initialize() -> void;
+  auto assemble(const string& statement) -> bool;
 
   //utility.cpp
   auto setMacro(const string& name, const string_vector& parameters, uint ip, bool inlined, bool global) -> void;
@@ -126,6 +128,8 @@ protected:
   auto evaluateDefines(string& statement) -> void;
 
   auto filepath() -> string;
+  auto strip(string& s) -> void;
+  auto validate(const string& s) -> bool;
   auto text(string s) -> string;
   auto character(string s) -> int64_t;
 
@@ -152,4 +156,7 @@ protected:
 
   file targetFile;
   string_vector sourceFilenames;
+
+  shared_pointer<Architecture> architecture;
+  friend class Architecture;
 };

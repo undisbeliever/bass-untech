@@ -15,6 +15,34 @@ auto Bass::assemble(const string& statement) -> bool {
   if(s.match("block {")) return true;
   if(s.match("} endblock")) return true;
 
+  //namespace name {
+  if(s.match("namespace ?* {")) {
+    s.trim("namespace ", "{", 1L).strip();
+    if(!validate(s)) error("invalid namespace identifier: ", s);
+    scope.append(s);
+    return true;
+  }
+
+  //}
+  if(s.match("} endnamespace")) {
+    scope.removeRight();
+    return true;
+  }
+
+  //function name {
+  if(s.match("function ?* {")) {
+    s.trim("function ", "{", 1L).strip();
+    setConstant(s, pc());
+    scope.append(s);
+    return true;
+  }
+
+  //}
+  if(s.match("} endfunction")) {
+    scope.removeRight();
+    return true;
+  }
+
   //constant name(value)
   if(s.match("constant ?*(*)")) {
     auto p = s.trim("constant ", ")", 1L).split("(", 1L).strip();
@@ -47,39 +75,25 @@ auto Bass::assemble(const string& statement) -> bool {
     return true;
   }
 
-  //namespace name {
-  if(s.match("namespace ?* {")) {
-    s.trim("namespace ", "{", 1L).strip();
-    scope.append(s);
-    return true;
-  }
-
-  //}
-  if(s.match("} endnamespace")) {
-    scope.removeRight();
-    return true;
-  }
-
-  //function name {
-  if(s.match("function ?* {")) {
-    s.trim("function ", "{", 1L).strip();
-    setConstant(s, pc());
-    scope.append(s);
-    return true;
-  }
-
-  //}
-  if(s.match("} endfunction")) {
-    scope.removeRight();
-    return true;
-  }
-
   //output "filename" [, create]
   if(s.match("output ?*")) {
     auto p = s.trimLeft("output ", 1L).qsplit(",").strip();
     string filename = {filepath(), p.take(0).trim("\"", "\"", 1L)};
     bool create = (p.size() && p(0) == "create");
     target(filename, create);
+    return true;
+  }
+
+  //architecture name
+  if(s.match("architecture ?*")) {
+    s.trimLeft("architecture ", 1L);
+    if(s == "none") architecture = new Architecture{*this};
+    else {
+      string location{Path::local(), "bass/architectures/", s, ".arch"};
+      if(!file::exists(location)) location = {Path::program(), "architectures/", s, ".arch"};
+      if(!file::exists(location)) error("unknown architecture: ", s);
+      architecture = new Table{*this, string::read(location)};
+    }
     return true;
   }
 
@@ -251,5 +265,5 @@ auto Bass::assemble(const string& statement) -> bool {
     return true;
   }
 
-  return false;
+  return architecture->assemble(statement);
 }

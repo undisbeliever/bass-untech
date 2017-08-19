@@ -5,12 +5,12 @@
 
 #include "bass.hpp"
 #include "core/core.cpp"
-#include "arch/table/table.cpp"
+#include "architecture/table/table.cpp"
 
 #include <nall/main.hpp>
 auto nall::main(string_vector args) -> void {
   if(args.size() < 3 || (args[1] != "create" && args[1] != "modify")) {
-    print(stderr, "bass v14.08\n");
+    print(stderr, "bass v14.09\n");
     print(stderr, "usage: bass (create|modify) [options] source [source ...]\n");
     print(stderr, "\n");
     print(stderr, "options:\n");
@@ -74,7 +74,7 @@ auto nall::main(string_vector args) -> void {
   }
 
   clock_t clockStart = clock();
-  BassTable bass;
+  Bass bass;
   bass.target(targetFilename, create);
   for(auto& sourceFilename : sourceFilenames) {
     bass.source(sourceFilename);

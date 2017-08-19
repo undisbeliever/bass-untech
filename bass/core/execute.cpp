@@ -149,7 +149,7 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
       frames.append({ip, macro().inlined});
       if(!frames.right().inlined) scope.append(p(0));
 
-      setDefine("#", {"_", macroInvocationCounter++}, false);
+      setDefine("#", {"_", macroInvocationCounter++, "_"}, false);
       for(auto& parameter : parameters) {
         if(parameter.type == Parameter::Type::Define) setDefine(parameter.name, parameter.value, false);
         if(parameter.type == Parameter::Type::Variable) setVariable(parameter.name, parameter.value.integer(), false);

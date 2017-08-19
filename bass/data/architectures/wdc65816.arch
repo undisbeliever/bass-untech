@@ -1,4 +1,4 @@
-arch(wdc65816) = R"(
+endian lsb
 
 asl            ;$0a
 clc            ;$18
@@ -475,5 +475,3 @@ sep #*08       ;$e2 =a
 brk #*08       ;$00 =a
 cop #*08       ;$02 =a
 wdm #*08       ;$42 =a
-
-)";

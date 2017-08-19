@@ -46,7 +46,7 @@
     </style>
   </head>
   <body>
-    <h1>bass v14.08</h1>
+    <h1>bass v14.09</h1>
     Author: byuu<br>
     License: GPLv3<br>
     <br>
@@ -433,6 +433,41 @@
     sequentially for output (only one output file can be open at a time.) The
     create parameter, if specified, states to overwrite the target file if it
     already exists. Otherwise, the file is opened in modification mode.</p>
+
+    <h3>architecture name</h3>
+    <p>This command will change the currently active architecture. An
+    architecture is essentially a processor that bass supports.</p>
+
+    <p>bass will first try to select any built-in architecture by the given
+    name, which allows bass to support architectures written as C++ modules.
+    Currently, the only built-in architecture is <i>none</i>, which is also the
+    default state at the start of assembly.</p>
+
+    <p>When no built-in architecture is found, bass will instead use its
+    table-driver assembler architecture. This architecture takes a text file as
+    input, which defines all supported opcodes and their encodings for a given
+    processor.</p>
+
+    <p>The name is transformed to <i>name.arch</i>, and bass tries to find said
+    file in two locations: first, in the <i>architectures/</i> subdirectory next
+    to the main bass executable. And second, in
+    <i>~/.local/bass/architectures/</i> or
+    <i>%localappdata%/bass/architectures/</i>, depending upon your OS.</p>
+
+    <p>bass ships with a variety of pre-made table architecture files. On
+    Linux/BSD, users should run <i>make install</i> to place these files into
+    the appropriate location to be used.</p>
+
+    <p>bass is also extensible, so users can add their own table architecture
+    files to support additional processors. Architectures written in C++ will
+    however require recompiling bass to include said architecture.</p>
+
+    <p>Note that the architecture command will also change the current endian
+    mode of bass, to match that of the given processor architecture.</p>
+
+    <p>In the event that <i>name</i> does not match a built-in architecture, and
+    no appropriate <i>name.arch</i> file can be found, this command will
+    generate an error.</p>
 
     <h3>endian (lsb|msb)</h3>
     <p>This command controls whether multi-byte values (eg from dw and dd) are

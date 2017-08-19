@@ -1,40 +1,11 @@
-#define arch(name) static string Arch_##name
-#include "architectures/spc700.arch"
-#include "architectures/wdc65816.arch"
-#undef arch
-
-auto BassTable::initialize() -> void {
-  Bass::initialize();
-
+Table::Table(Bass& self, const string& table) : Architecture(self) {
   bitval = 0;
   bitpos = 0;
-  table.reset();
+  parseTable(table);
 }
 
-auto BassTable::assemble(const string& statement) -> bool {
-  if(Bass::assemble(statement)) return true;
-
+auto Table::assemble(const string& statement) -> bool {
   string s = statement;
-
-  if(s.match("architecture ?*")) {
-    s.trimLeft("architecture ", 1L);
-    string data;
-    if(0);
-    else if(s == "reset") data = "";
-    else if(s == "spc700") data = Arch_spc700;
-    else if(s == "wdc65816") data = Arch_wdc65816;
-    else if(s.match("\"?*\"")) {
-      s.trim("\"", "\"", 1L);
-      s = {Location::path(sourceFilenames.right()), s};
-      if(!file::exists(s)) error("arch file ", s, " not found");
-      data = file::read(s);
-    } else {
-      error("unrecognized arch ", s);
-    }
-    table.reset();
-    parseTable(data);
-    return true;
-  }
 
   if(s.match("instrument \"*\"")) {
     s.trim("instrument \"", "\"", 1L);
@@ -42,7 +13,7 @@ auto BassTable::assemble(const string& statement) -> bool {
     return true;
   }
 
-  uint pc = this->pc();
+  uint pc = Architecture::pc();
 
   for(auto& opcode : table) {
     if(!tokenize(s, opcode.pattern)) continue;
@@ -105,7 +76,7 @@ auto BassTable::assemble(const string& statement) -> bool {
   return false;
 }
 
-auto BassTable::bitLength(string& text) const -> uint {
+auto Table::bitLength(string& text) const -> uint {
   auto binLength = [&](const char* p) -> uint {
     uint length = 0;
     while(*p) {
@@ -139,7 +110,7 @@ auto BassTable::bitLength(string& text) const -> uint {
   return 0;
 }
 
-auto BassTable::writeBits(uint64_t data, uint length) -> void {
+auto Table::writeBits(uint64_t data, uint length) -> void {
   bitval <<= length;
   bitval |= data;
   bitpos += length;
@@ -151,10 +122,14 @@ auto BassTable::writeBits(uint64_t data, uint length) -> void {
   }
 }
 
-auto BassTable::parseTable(const string& text) -> bool {
+auto Table::parseTable(const string& text) -> bool {
   auto lines = text.split("\n");
   for(auto& line : lines) {
     if(auto position = line.find("//")) line.resize(position());  //remove comments
+
+    if(line == "endian lsb") { setEndian(Bass::Endian::LSB); continue; }
+    if(line == "endian msb") { setEndian(Bass::Endian::MSB); continue; }
+
     auto part = line.split(";", 1L).strip();
     if(part.size() != 2) continue;
 
@@ -167,7 +142,7 @@ auto BassTable::parseTable(const string& text) -> bool {
   return true;
 }
 
-auto BassTable::assembleTableLHS(Opcode& opcode, const string& text) -> void {
+auto Table::assembleTableLHS(Opcode& opcode, const string& text) -> void {
   uint offset = 0;
 
   auto length = [&] {
@@ -199,7 +174,7 @@ auto BassTable::assembleTableLHS(Opcode& opcode, const string& text) -> void {
   if(opcode.number.size() == opcode.prefix.size()) opcode.pattern.append("*");
 }
 
-auto BassTable::assembleTableRHS(Opcode& opcode, const string& text) -> void {
+auto Table::assembleTableRHS(Opcode& opcode, const string& text) -> void {
   uint offset = 0;
 
   auto list = text.split(" ");

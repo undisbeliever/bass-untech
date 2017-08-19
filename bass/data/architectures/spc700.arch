@@ -1,4 +1,4 @@
-arch(spc700) = R"(
+endian lsb
 
 nop              ;$00
 brk              ;$0f
@@ -322,5 +322,3 @@ dec *08          ;$8b =a
 //
 dec.w *16        ;$8c ~a
 dec.b *08        ;$8b ~a
-
-)";

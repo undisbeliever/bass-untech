@@ -29,11 +29,11 @@ auto Bass::source(const string& filename) -> bool {
   sourceFilenames.append(filename);
 
   string data = file::read(filename);
-  data.transform("\t\r", "  ");
+  strip(data.transform("\t\r", "  "));
 
   auto lines = data.split("\n");
   for(uint lineNumber : range(lines)) {
-    if(auto position = lines[lineNumber].find("//")) {
+    if(auto position = lines[lineNumber].qfind("//")) {
       lines[lineNumber].resize(position());  //remove comments
     }
 
@@ -78,9 +78,11 @@ auto Bass::assemble(bool strict) -> bool {
     analyze();
 
     phase = Phase::Query;
+    architecture = new Architecture{*this};
     execute();
 
     phase = Phase::Write;
+    architecture = new Architecture{*this};
     execute();
   } catch(...) {
     return false;

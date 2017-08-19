@@ -2,4 +2,5 @@
 using namespace nall;
 
 #include "core/core.hpp"
-#include "arch/table/table.hpp"
+#include "architecture/architecture.hpp"
+#include "architecture/table/table.hpp"
