@@ -38,15 +38,18 @@ struct Bass {
   struct Define {
     Define() {}
     Define(const string& name) : name(name) {}
-    Define(const string& name, const string& value) : name(name), value(value) {}
+    Define(const string& name, const string_vector& parameters, const string& value) : name(name), parameters(parameters), value(value) {}
 
     auto hash() const -> uint { return name.hash(); }
     auto operator==(const Define& source) const -> bool { return name == source.name; }
     auto operator< (const Define& source) const -> bool { return name <  source.name; }
 
     string name;
+    string_vector parameters;
     string value;
   };
+
+  using Expression = Define;  //Define and Expression structures are identical
 
   struct Variable {
     Variable() {}
@@ -64,13 +67,19 @@ struct Bass {
   using Constant = Variable;  //Variable and Constant structures are identical
 
   struct Frame {
-    enum class Level : uint { Active, Parent, Global };
+    enum class Level : uint {
+      Inline,  //use deepest frame (eg for parameters)
+      Active,  //use deepest non-inline frame
+      Parent,  //use second-deepest non-inline frame
+      Global,  //use root frame
+    };
 
     uint ip;
     bool inlined;
 
     hashset<Macro> macros;
     hashset<Define> defines;
+    hashset<Expression> expressions;
     hashset<Variable> variables;
   };
 
@@ -98,7 +107,7 @@ protected:
   auto evaluate(const string& expression, Evaluation mode = Evaluation::Default) -> int64_t;
   auto evaluate(Eval::Node* node, Evaluation mode) -> int64_t;
   auto evaluateParameters(Eval::Node* node, Evaluation mode) -> vector<int64_t>;
-  auto evaluateFunction(Eval::Node* node, Evaluation mode) -> int64_t;
+  auto evaluateExpression(Eval::Node* node, Evaluation mode) -> int64_t;
   auto evaluateLiteral(Eval::Node* node, Evaluation mode) -> int64_t;
   auto evaluateAssign(Eval::Node* node, Evaluation mode) -> int64_t;
 
@@ -115,13 +124,16 @@ protected:
   auto assemble(const string& statement) -> bool;
 
   //utility.cpp
-  auto setMacro(const string& name, const string_vector& parameters, uint ip, bool inlined, Frame::Level level = Frame::Level::Active) -> void;
+  auto setMacro(const string& name, const string_vector& parameters, uint ip, bool inlined, Frame::Level level) -> void;
   auto findMacro(const string& name) -> maybe<Macro&>;
 
-  auto setDefine(const string& name, const string& value, Frame::Level level = Frame::Level::Active) -> void;
+  auto setDefine(const string& name, const string_vector& parameters, const string& value, Frame::Level level) -> void;
   auto findDefine(const string& name) -> maybe<Define&>;
 
-  auto setVariable(const string& name, int64_t value, Frame::Level level = Frame::Level::Active) -> void;
+  auto setExpression(const string& name, const string_vector& parameters, const string& value, Frame::Level level) -> void;
+  auto findExpression(const string& name) -> maybe<Expression&>;
+
+  auto setVariable(const string& name, int64_t value, Frame::Level level) -> void;
   auto findVariable(const string& name) -> maybe<Variable&>;
 
   auto setConstant(const string& name, int64_t value) -> void;

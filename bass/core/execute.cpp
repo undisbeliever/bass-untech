@@ -8,7 +8,7 @@ auto Bass::execute() -> bool {
 
   frames.append({0, false});
   for(auto& define : defines) {
-    setDefine(define.name, define.value);
+    setDefine(define.name, {}, define.value, Frame::Level::Inline);
   }
 
   while(ip < program.size()) {
@@ -53,20 +53,36 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
     return true;
   }
 
-  if(s.match("define ?*(*)")) {
-    auto p = s.trim("define ", ")", 1L).split("(", 1L).strip();
-    setDefine(p(0), p(1), level);
+  if(s.match("define ?*(*)*")) {
+    auto e = s.trimLeft("define ", 1L).split("=", 1L).strip();
+    auto p = e(0).trimRight(")", 1L).split("(", 1L).strip();
+    auto a = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
+    setDefine(p(0), a, e(1), level);
     return true;
   }
 
-  if(s.match("evaluate ?*(*)")) {
-    auto p = s.trim("evaluate ", ")", 1L).split("(", 1L).strip();
-    setDefine(p(0), evaluate(p(1)), level);
+  if(s.match("define ?*")) {
+    auto p = s.trimLeft("define ", 1L).split("=", 1L).strip();
+    setDefine(p(0), {}, p(1), level);
     return true;
   }
 
-  if(s.match("variable ?*(*)")) {
-    auto p = s.trim("variable ", ")", 1L).split("(", 1L).strip();
+  if(s.match("evaluate ?*")) {
+    auto p = s.trimLeft("evaluate ", 1L).split("=", 1L).strip();
+    setDefine(p(0), {}, evaluate(p(1)), level);
+    return true;
+  }
+
+  if(s.match("expression ?*(*)*")) {
+    auto e = s.trimLeft("expression ", 1L).split("=", 1L).strip();
+    auto p = e(0).trimRight(")", 1L).split("(", 1L).strip();
+    auto a = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
+    setExpression(p(0), a, e(1), level);
+    return true;
+  }
+
+  if(s.match("variable ?*")) {
+    auto p = s.trimLeft("variable ", 1L).split("=", 1L).strip();
     setVariable(p(0), evaluate(p(1)), level);
     return true;
   }
@@ -124,35 +140,25 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
   }
 
   if(s.match("?*(*)")) {
-    auto p = string{s}.trimRight(")", 1L).split("(", 1L);
-    auto a = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
-    string name = {p(0), ":", a.size()};  //arity overloading
+    auto p = string{s}.trimRight(")", 1L).split("(", 1L).strip();
+    auto parameters = !p(1) ? string_vector{} : p(1).qsplit(",").strip();
+    string name = p(0);
+    if(parameters) name.append(":", parameters.size());
     if(auto macro = findMacro({name})) {
-      struct Parameter {
-        enum class Type : uint { Define, Variable } type;
-        string name;
-        string value;
-      };
-
-      vector<Parameter> parameters;
-      for(uint n : range(a)) {
-        auto p = macro().parameters(n).split(" ", 1L).strip();
-        if(p.size() == 1) p.prepend("define");
-
-        if(p(0) == "define") parameters.append({Parameter::Type::Define, p(1), a(n)});
-        else if(p(0) == "string") parameters.append({Parameter::Type::Define, p(1), text(a(n))});
-        else if(p(0) == "evaluate") parameters.append({Parameter::Type::Define, p(1), evaluate(a(n))});
-        else if(p(0) == "variable") parameters.append({Parameter::Type::Variable, p(1), evaluate(a(n))});
-        else error("unsupported parameter type: ", p(0));
-      }
-
       frames.append({ip, macro().inlined});
       if(!frames.right().inlined) scope.append(p(0));
 
-      setDefine("#", {"_", macroInvocationCounter++, "_"});
-      for(auto& parameter : parameters) {
-        if(parameter.type == Parameter::Type::Define) setDefine(parameter.name, parameter.value);
-        if(parameter.type == Parameter::Type::Variable) setVariable(parameter.name, parameter.value.integer());
+      setDefine("#", {}, {"_", macroInvocationCounter++, "_"}, Frame::Level::Inline);
+      for(uint n : range(parameters)) {
+        auto p = macro().parameters(n).split(" ", 1L).strip();
+        if(p.size() == 1) p.prepend("define");
+
+        if(0);
+        else if(p[0] == "define") setDefine(p[1], {}, parameters(n), Frame::Level::Inline);
+        else if(p[0] == "string") setDefine(p[1], {}, text(parameters(n)), Frame::Level::Inline);
+        else if(p[0] == "evaluate") setDefine(p[1], {}, evaluate(parameters(n)), Frame::Level::Inline);
+        else if(p[0] == "variable") setVariable(p[1], evaluate(parameters(n)), Frame::Level::Inline);
+        else error("unsupported parameter type: ", p[0]);
       }
 
       ip = macro().ip;

@@ -23,7 +23,8 @@ auto Bass::evaluate(Eval::Node* node, Evaluation mode) -> int64_t {
   #define p(n) evaluate(node->link[n], mode)
 
   switch(node->type) {
-  case Eval::Node::Type::Function: return evaluateFunction(node, mode);
+  case Eval::Node::Type::Null: return 0;  //empty expressions
+  case Eval::Node::Type::Function: return evaluateExpression(node, mode);
   case Eval::Node::Type::Literal: return evaluateLiteral(node, mode);
   case Eval::Node::Type::LogicalNot: return !p(0);
   case Eval::Node::Type::BitwiseNot: return ~p(0);
@@ -63,23 +64,36 @@ auto Bass::evaluateParameters(Eval::Node* node, Evaluation mode) -> vector<int64
   return result;
 }
 
-auto Bass::evaluateFunction(Eval::Node* node, Evaluation mode) -> int64_t {
-  auto p = evaluateParameters(node->link[1], mode);
-  string s = {node->link[0]->literal, ":", p.size()};
+auto Bass::evaluateExpression(Eval::Node* node, Evaluation mode) -> int64_t {
+  auto parameters = evaluateParameters(node->link[1], mode);
+  string name = node->link[0]->literal;
+  if(parameters) name.append(":", parameters.size());
 
-  if(s == "origin:0") return origin;
-  if(s == "base:0") return base;
-  if(s == "pc:0") return pc();
-  if(s == "print_char:1") {
-    if(writePhase()) print(stderr, (char)p[0]);
-    return p[0];
-  }
-  if(s == "print_hex:1") {
-    if(writePhase()) print(stderr, hex(p[0]));
-    return p[0];
+  if(name == "origin") return origin;
+  if(name == "base") return base;
+  if(name == "pc") return pc();
+
+  if(name == "print_char:1") {
+    if(writePhase()) print(stderr, (char)parameters[0]);
+    return parameters[0];
   }
 
-  error("unrecognized function: ", s);
+  if(name == "print_hex:1") {
+    if(writePhase()) print(stderr, hex(parameters[0]));
+    return parameters[0];
+  }
+
+  if(auto expression = findExpression(name)) {
+    if(parameters) frames.append({0, true});
+    for(auto n : range(parameters.size())) {
+      setVariable(expression().parameters(n), evaluate(parameters(n)), Frame::Level::Inline);
+    }
+    auto result = evaluate(expression().value);
+    if(parameters) frames.removeRight();
+    return result;
+  }
+
+  error("unrecognized expression: ", name);
 }
 
 auto Bass::evaluateLiteral(Eval::Node* node, Evaluation mode) -> int64_t {

@@ -60,7 +60,7 @@ auto Bass::source(const string& filename) -> bool {
 }
 
 auto Bass::define(const string& name, const string& value) -> void {
-  defines.insert({name, value});
+  defines.insert({name, {}, value});
 }
 
 auto Bass::constant(const string& name, const string& value) -> void {
