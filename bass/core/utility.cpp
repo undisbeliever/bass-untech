@@ -118,6 +118,8 @@ auto Bass::findExpression(const string& name) -> maybe<Expression&> {
       s.removeRight();
     }
   }
+
+  return nothing;
 }
 
 auto Bass::setVariable(const string& name, int64_t value, Frame::Level level) -> void {
@@ -235,10 +237,14 @@ auto Bass::filepath() -> string {
 auto Bass::split(const string& s) -> string_vector {
   string_vector result;
   uint offset = 0;
-  bool quoted = false;
+  char quoted = 0;
   uint depth = 0;
   for(uint n : range(s.size())) {
-    if(s[n] == '"' || s[n] == '\'') quoted = !quoted;
+    if(!quoted) {
+      if(s[n] == '"' || s[n] == '\'') quoted = s[n];
+    } else if(quoted == s[n]) {
+      quoted = 0;
+    }
     if(s[n] == '(' && !quoted) depth++;
     if(s[n] == ')' && !quoted) depth--;
     if(s[n] == ',' && !quoted && !depth) {
@@ -247,15 +253,21 @@ auto Bass::split(const string& s) -> string_vector {
     }
   }
   if(offset < s.size()) result.append(slice(s, offset, s.size() - offset));
+  if(quoted) error("mismatched quotes in expression");
+  if(depth) error("mismatched parentheses in expression");
   return result.strip();
 }
 
 //reduce all duplicate whitespace segments (eg "  ") to single whitespace (" ")
 auto Bass::strip(string& s) -> void {
   uint offset = 0;
-  bool quoted = false;
+  char quoted = 0;
   for(uint n : range(s.size())) {
-    if(s[n] == '"' || s[n] == '\'') quoted = !quoted;
+    if(!quoted) {
+      if(s[n] == '"' || s[n] == '\'') quoted = s[n];
+    } else if(quoted == s[n]) {
+      quoted = 0;
+    }
     if(!quoted && s[n] == ' ' && s[n + 1] == ' ') continue;
     s.get()[offset++] = s[n];
   }

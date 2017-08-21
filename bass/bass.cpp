@@ -9,12 +9,13 @@
 
 #include <nall/main.hpp>
 auto nall::main(string_vector args) -> void {
-  if(args.size() < 3 || (args[1] != "create" && args[1] != "modify")) {
-    print(stderr, "bass v14.12\n");
-    print(stderr, "usage: bass (create|modify) [options] source [source ...]\n");
+  if(args.size() == 1) {
+    print(stderr, "bass v14.13\n");
+    print(stderr, "usage: bass [options] source [source ...]\n");
     print(stderr, "\n");
     print(stderr, "options:\n");
-    print(stderr, "  -o target        specify default output filename\n");
+    print(stderr, "  -o target        specify default output filename [overwrite]\n");
+    print(stderr, "  -m target        specify default output filename [modify]\n");
     print(stderr, "  -d name[=value]  create define with optional value\n");
     print(stderr, "  -c name[=value]  create constant with optional value\n");
     print(stderr, "  -strict          upgrade warnings to errors\n");
@@ -25,15 +26,23 @@ auto nall::main(string_vector args) -> void {
   string targetFilename;
   string_vector defines;
   string_vector constants;
-  bool create = args[1] == "create";
+  bool create = false;
   bool strict = false;
   bool benchmark = false;
   string_vector sourceFilenames;
 
-  for(uint n = 2; n < args.size();) {
-    string s = args[n];
+  for(uint n = 1; n < args.size();) {
+    const string& s = args[n];
 
     if(s == "-o") {
+      create = true;
+      targetFilename = args(n + 1, "");
+      n += 2;
+      continue;
+    }
+
+    if(s == "-m") {
+      create = false;
       targetFilename = args(n + 1, "");
       n += 2;
       continue;

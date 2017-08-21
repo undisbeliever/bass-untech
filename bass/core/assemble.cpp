@@ -18,7 +18,7 @@ auto Bass::assemble(const string& statement) -> bool {
   //namespace name {
   if(s.match("namespace ?* {")) {
     s.trim("namespace ", "{", 1L).strip();
-    setConstant(s, pc());
+    if(!validate(s)) error("invalid namespace specifier: ", s);
     scope.append(s);
     return true;
   }
