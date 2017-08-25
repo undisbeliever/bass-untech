@@ -29,7 +29,7 @@ auto Bass::source(const string& filename) -> bool {
   sourceFilenames.append(filename);
 
   string data = file::read(filename);
-  strip(data.transform("\t\r", "  "));
+  data.transform("\t\r", "  ");
 
   auto lines = data.split("\n");
   for(uint lineNumber : range(lines)) {
@@ -39,7 +39,8 @@ auto Bass::source(const string& filename) -> bool {
 
     auto blocks = lines[lineNumber].qsplit(";").strip();
     for(uint blockNumber : range(blocks)) {
-      string statement = blocks[blockNumber].strip();
+      string statement = blocks[blockNumber];
+      strip(statement);
       if(!statement) continue;
 
       if(statement.match("include \"?*\"")) {
