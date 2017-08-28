@@ -13,7 +13,7 @@ auto Bass::analyze() -> bool {
 auto Bass::analyzeInstruction(Instruction& i) -> bool {
   string s = i.statement;
 
-  if(s.match("}") && !blocks) error("} without matching {");
+  if(s.match("}") && !blocks) error("} without matching {: ", sourceFilenames[i.fileNumber], ":", i.lineNumber);
 
   if(s.match("{")) {
     blocks.append({ip - 1, "block"});
