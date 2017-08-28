@@ -161,6 +161,16 @@ auto Bass::findVariable(const string& name) -> maybe<Variable&> {
   return nothing;
 }
 
+auto Bass::setUnknownConstant(const string& name) -> void {
+  if(!validate(name)) error("invalid constant identifier: ", name);
+  string scopedName = {scope.merge("."), scope ? "." : "", name};
+
+  if(writePhase()) error("constant value unknown at write phase: ", scopedName);
+
+  if(constantNames.find(scopedName)) error("constant cannot be modified: ", scopedName);
+  constantNames.insert(scopedName);
+}
+
 auto Bass::setConstant(const string& name, int64_t value) -> void {
   if(!validate(name)) error("invalid constant identifier: ", name);
   string scopedName = {scope.merge("."), scope ? "." : "", name};
@@ -169,6 +179,7 @@ auto Bass::setConstant(const string& name, int64_t value) -> void {
     if(queryPhase()) error("constant cannot be modified: ", scopedName);
     constant().value = value;
   } else {
+    constantNames.insert(scopedName);
     constants.insert({scopedName, value});
   }
 }
@@ -178,6 +189,20 @@ auto Bass::findConstant(const string& name) -> maybe<Constant&> {
   while(true) {
     string scopedName = {s.merge("."), s ? "." : "", name};
     if(auto constant = constants.find({scopedName})) {
+      return constant();
+    }
+    if(!s) break;
+    s.removeRight();
+  }
+
+  return nothing;
+}
+
+auto Bass::findConstantName(const string& name) -> maybe<string> {
+  auto s = scope;
+  while(true) {
+    string scopedName = {s.merge("."), s ? "." : "", name};
+    if(auto constant = constantNames.find({scopedName})) {
       return constant();
     }
     if(!s) break;

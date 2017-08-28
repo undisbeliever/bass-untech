@@ -47,7 +47,12 @@ auto Bass::assemble(const string& statement) -> bool {
   //constant name(value)
   if(s.match("constant ?*")) {
     auto p = s.trimLeft("constant ", 1L).split("=", 1L).strip();
-    setConstant(p(0), evaluate(p(1)));
+    auto v = evaluate(p(1), Evaluation::Lax);
+    if(forwardReference) {
+      setUnknownConstant(p(0));
+    } else {
+      setConstant(p(0), v);
+    }
     return true;
   }
 
