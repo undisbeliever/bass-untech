@@ -10,7 +10,7 @@ struct Bass {
 
   enum class Phase : uint { Analyze, Query, Write };
   enum class Endian : uint { LSB, MSB };
-  enum class Evaluation : uint { Default = 0, Strict = 1 };  //strict mode disallows forward-declaration of constants
+  enum class Evaluation : uint { Strict = 0, Lax = 1 };  //strict mode disallows forward-declaration of constants
 
   struct Instruction {
     string statement;
@@ -108,7 +108,7 @@ protected:
   template<typename... P> auto error(P&&... p) -> void;
 
   //evaluate.cpp
-  auto evaluate(const string& expression, Evaluation mode = Evaluation::Default) -> int64_t;
+  auto evaluate(const string& expression, Evaluation mode = Evaluation::Strict) -> int64_t;
   auto evaluate(Eval::Node* node, Evaluation mode) -> int64_t;
   auto evaluateParameters(Eval::Node* node, Evaluation mode) -> vector<int64_t>;
   auto evaluateExpression(Eval::Node* node, Evaluation mode) -> int64_t;

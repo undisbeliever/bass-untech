@@ -23,7 +23,7 @@ struct Architecture {
     self.endian = endian;
   }
 
-  auto evaluate(const string& expression, Bass::Evaluation mode = Bass::Evaluation::Default) -> int64_t {
+  auto evaluate(const string& expression, Bass::Evaluation mode = Bass::Evaluation::Strict) -> int64_t {
     return self.evaluate(expression, mode);
   }
 

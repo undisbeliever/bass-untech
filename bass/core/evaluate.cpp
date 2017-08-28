@@ -99,7 +99,7 @@ auto Bass::evaluateLiteral(Eval::Node* node, Evaluation mode) -> int64_t {
 
   if(auto variable = findVariable(s)) return variable().value;
   if(auto constant = findConstant(s)) return constant().value;
-  if(mode != Evaluation::Strict && queryPhase()) return pc();
+  if(mode == Evaluation::Lax && queryPhase()) return pc();
 
   error("unrecognized variable: ", s);
 }
