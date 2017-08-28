@@ -1,6 +1,7 @@
-//bass
+//bass-untech
 //license: GPLv3
 //author: byuu
+//forked by: The UnDisbeliever
 //project started: 2013-09-27
 
 #include "bass.hpp"
@@ -10,8 +11,8 @@
 #include <nall/main.hpp>
 auto nall::main(string_vector args) -> void {
   if(args.size() == 1) {
-    print(stderr, "bass v14.14\n");
-    print(stderr, "usage: bass [options] source [source ...]\n");
+    print(stderr, "bass-untech v14.14\n");
+    print(stderr, "usage: bass-untech [options] source [source ...]\n");
     print(stderr, "\n");
     print(stderr, "options:\n");
     print(stderr, "  -o target        specify default output filename [overwrite]\n");

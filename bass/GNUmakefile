@@ -3,7 +3,7 @@ include ../nall/GNUmakefile
 
 flags += -I..
 
-name := bass
+name := bass-untech
 objects := obj/bass.o
 
 all: $(objects)
