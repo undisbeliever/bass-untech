@@ -19,12 +19,14 @@ auto nall::main(string_vector args) -> void {
     print(stderr, "  -m target        specify default output filename [modify]\n");
     print(stderr, "  -d name[=value]  create define with optional value\n");
     print(stderr, "  -c name[=value]  create constant with optional value\n");
+    print(stderr, "  -sym filename    create symbol file\n");
     print(stderr, "  -strict          upgrade warnings to errors\n");
     print(stderr, "  -benchmark       benchmark performance\n");
     exit(EXIT_FAILURE);
   }
 
   string targetFilename;
+  string symFilename;
   string_vector defines;
   string_vector constants;
   bool create = false;
@@ -61,6 +63,12 @@ auto nall::main(string_vector args) -> void {
       continue;
     }
 
+    if(s == "-sym") {
+      symFilename = args(n + 1, "");
+      n += 2;
+      continue;
+    }
+
     if(s == "-strict") {
       strict = true;
       n += 1;
@@ -86,6 +94,9 @@ auto nall::main(string_vector args) -> void {
   clock_t clockStart = clock();
   Bass bass;
   bass.target(targetFilename, create);
+  if(symFilename) {
+    bass.symFile(symFilename);
+  }
   for(auto& sourceFilename : sourceFilenames) {
     bass.source(sourceFilename);
   }
