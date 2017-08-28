@@ -5,6 +5,7 @@ This repository contains The UnDisbeliever's personal fork of
 [byuu's bass assembler](https://byuu.org/tool/bass/).
 
 It contains features that do not exist in vanilla bass, including:
+ * Printing the instruction stack when displaying error messages
 
 
 License

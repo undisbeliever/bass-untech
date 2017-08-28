@@ -146,6 +146,7 @@ auto Bass::executeInstruction(Instruction& i) -> bool {
     if(parameters) name.append("#", parameters.size());
     if(auto macro = findMacro({name})) {
       frames.append({ip, macro().inlined});
+      frames.right().invokedBy = activeInstruction;
       if(!frames.right().inlined) scope.append(p(0));
 
       setDefine("#", {}, {"_", macroInvocationCounter++, "_"}, Frame::Level::Inline);

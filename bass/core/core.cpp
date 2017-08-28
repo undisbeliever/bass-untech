@@ -123,16 +123,27 @@ auto Bass::printInstruction() -> void {
   }
 }
 
+auto Bass::printInstructionStack() -> void {
+  printInstruction();
+
+  for(unsigned s : rrange(frames)) {
+    if(frames[s].invokedBy) {
+      auto& i = *frames[s].invokedBy;
+      print(stderr, "   ", sourceFilenames[i.fileNumber], ":", i.lineNumber, ":", i.blockNumber, ": ", i.statement, "\n");
+    }
+  }
+}
+
 template<typename... P> auto Bass::notice(P&&... p) -> void {
   string s{forward<P>(p)...};
   print(stderr, "notice: ", s, "\n");
-  printInstruction();
+  printInstructionStack();
 }
 
 template<typename... P> auto Bass::warning(P&&... p) -> void {
   string s{forward<P>(p)...};
   print(stderr, "warning: ", s, "\n");
-  printInstruction();
+  printInstructionStack();
 
   if(!strict) return;
   struct BassWarning {};
@@ -142,7 +153,7 @@ template<typename... P> auto Bass::warning(P&&... p) -> void {
 template<typename... P> auto Bass::error(P&&... p) -> void {
   string s{forward<P>(p)...};
   print(stderr, "error: ", s, "\n");
-  printInstruction();
+  printInstructionStack();
 
   struct BassError {};
   throw BassError();
