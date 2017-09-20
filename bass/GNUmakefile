@@ -5,6 +5,7 @@ flags += -I..
 
 name := bass-untech
 objects := obj/bass.o
+arch_dir := bass/architectures
 
 all: out/$(name)
 
@@ -26,8 +27,8 @@ ifeq ($(shell id -un),root)
 	$(error "make install should not be run as root")
 else ifneq ($(filter $(platform),linux bsd),)
 	if [ -f out/$(name) ]; then cp out/$(name) $(prefix)/bin/$(name); fi
-	mkdir -p $(prefix)/share/$(name)/architectures/
-	cp -R data/architectures/* $(prefix)/share/$(name)/architectures/
+	mkdir -p $(prefix)/share/$(arch_dir)/
+	cp -R data/architectures/* $(prefix)/share/$(arch_dir)/
 endif
 
 uninstall:
