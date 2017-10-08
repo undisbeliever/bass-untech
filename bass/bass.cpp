@@ -11,7 +11,7 @@
 #include <nall/main.hpp>
 auto nall::main(string_vector args) -> void {
   if(args.size() == 1) {
-    print(stderr, "bass-untech v14.14\n");
+    print(stderr, "bass-untech v15\n");
     print(stderr, "usage: bass-untech [options] source [source ...]\n");
     print(stderr, "\n");
     print(stderr, "options:\n");

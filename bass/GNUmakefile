@@ -1,4 +1,5 @@
-build := release
+build := optimize
+console := true
 include ../nall/GNUmakefile
 
 flags += -I..
