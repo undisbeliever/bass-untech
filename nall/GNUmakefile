@@ -23,7 +23,7 @@ ifeq ($(platform),)
     platform := windows
     delete = del $(subst /,\,$1)
   else ifneq ($(findstring Darwin,$(uname)),)
-    platform := macosx
+    platform := macos
     delete = rm -f $1
   else ifneq ($(findstring Linux,$(uname)),)
     platform := linux
@@ -48,7 +48,7 @@ ifeq ($(compiler),)
   ifeq ($(platform),windows)
     compiler := g++
     cppflags := -x c++ -std=gnu++14
-  else ifeq ($(platform),macosx)
+  else ifeq ($(platform),macos)
     compiler := clang++
   else ifeq ($(platform),linux)
     compiler := g++-4.9
@@ -60,8 +60,10 @@ ifeq ($(compiler),)
 endif
 
 # build settings
-ifeq ($(build),release)
+ifeq ($(build),optimize)
   flags += -O3
+else ifeq ($(build),release)
+  flags += -O2
 else ifeq ($(build),stable)
   flags += -O1
 else ifeq ($(build),debug)
@@ -87,11 +89,12 @@ endif
 # windows settings
 ifeq ($(platform),windows)
   link += -lws2_32 -lole32
+  link += $(if $(findstring $(console),true),-mconsole,-mwindows)
   windres := windres
 endif
 
-# macosx settings
-ifeq ($(platform),macosx)
+# macos settings
+ifeq ($(platform),macos)
   flags += -stdlib=libc++
   link += -lc++ -lobjc
 endif

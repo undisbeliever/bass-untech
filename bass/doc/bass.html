@@ -46,21 +46,21 @@
     </style>
   </head>
   <body>
-    <h1>bass v14.10</h1>
+    <h1>bass v15</h1>
     Author: byuu<br>
     License: GPLv3<br>
     <br>
 
     <h2>Terminal Usage</h2>
-    <pre>bass (create|modify) [options] source [source ...]</pre>
-
-    <p><i>create</i> will cause bass to overwrite an existing target file.</p>
-
-    <p><i>modify</i> will instead make changes to an existing target file.</p>
+    <pre>bass [options] source [source ...]</pre>
 
     <h3>Options</h3>
 
-    <p><i>-o target</i> will specify the default target filename.</p>
+    <p><i>-o target</i> will specify the default target filename, and overwrite
+    any existing file by said filename.</p>
+
+    <p><i>-m target</i> will specify the default target filenamd, and will
+    modify, rather than replace, any existing file by said name.</p>
 
     <p><i>-d name[=value]</i> will create a define with the given name, and
     assign to it either an empty value or the value provided.</p>
@@ -152,6 +152,7 @@
     \\ = backslash (\)
     \s = single-quote (')
     \d = double-quote (")
+    \c = comma (,)
     \b = block separator (;)
     \n = line feed
     </pre>
@@ -169,6 +170,16 @@
     <p>Execution acts much like a scripting language. Statements are evaluated
     and a control flow (stack frame) is maintained.</p>
 
+    <h3>Expressions</h3>
+    <p>Expressions can be used to transform variables or constants by use of
+    parameters. Expressions may be recursive.</p>
+
+    <h4>Example:</h4>
+    <pre>
+    expression sum(x, y) = x + y
+    print sum(1 + 2), "\n"  //prints 3
+    </pre>
+
     <h3>Defines</h3>
     <p>Defines can be used to substitute values in expressions. The
     <i>define</i> keyword allows specifying an exact expression to substitute,
@@ -178,14 +189,23 @@
 
     <h4>Example:</h4>
     <pre>
-    define x(1 + 2)
+    define x = 1 + 2
     print "{x}\n"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //prints "1 + 2\n"
-    evaluate x({x} + 3)&nbsp; //x = evaluate(1 + 2 + 3)
+    evaluate x = {x} + 3&nbsp; //x = evaluate(1 + 2 + 3)
     print "{x}\n"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //prints "6\n"
     </pre>
 
+    <p>Defines can also take arguments for substitution.</p>
+
+    <h4>Example:</h4>
+    <pre>
+    define sum(x, y) = ({x} + {y})
+    print "{sum(1,2)}\n"  //prints "(1 + 2)\n"
+    </pre>
+
     <h4>Invocation</h4>
-    <p>Defines can be invoked with: <i>{defineName}</i>. If a define is not
+    <p>Defines can be invoked with: <i>{defineName}</i>. Defines with parameters
+    can be invoked with <i>{defineName(parameter, ...)}</i>. If a define is not
     matched, there is no error, the literal <i>{defineName}</i> will be passed
     along to the assembler verbatim.</p>
 
@@ -242,6 +262,9 @@
     <i>{#}</i> can be used in a label name, where it will be substituted with a
     numeric value that increments every time a macro is invoked.</p>
 
+    <p>Note that the invocation counter may not work as expected inside of
+    recursive macros. Only use this for top-level macros.</p>
+
     <h4>Invocation</h4>
     <p>Macros can be invoked with the syntax: <i>macroName(parameter, parameter,
     ...)</i>. If a macro is not matched, there is no error, the literal
@@ -275,10 +298,10 @@
 
     <pre>
     macro factorial(variable n) {
-    &nbsp;&nbsp;parent variable result(1)
+    &nbsp;&nbsp;parent variable result = 1
     &nbsp;&nbsp;if n >= 1 {
     &nbsp;&nbsp;&nbsp;&nbsp;factorial(n - 1)
-    &nbsp;&nbsp;&nbsp;&nbsp;parent variable result(n * factorial.result)
+    &nbsp;&nbsp;&nbsp;&nbsp;result = n * factorial.result
     &nbsp;&nbsp;}
     }
 
@@ -293,7 +316,7 @@
 
     <pre>
     inline square(variable value) {
-    &nbsp;&nbsp;variable result(value * value)
+    &nbsp;&nbsp;variable result = value * value
     }
 
     function main {
@@ -310,10 +333,10 @@
 
     <h4>Example:</h4>
     <pre>
-    define x(16)
+    define x = 16
     while {x} > 0 {
     &nbsp;print "{x}\n"
-    &nbsp;evaluate x({x} - 1)
+    &nbsp;evaluate x = {x} - 1
     }
     if {x} > 16 {
     &nbsp;&nbsp;...
@@ -340,14 +363,14 @@
 
     <h4>Example:</h4>
     <pre>
-    variable x(16)
+    variable x = 16
     lda #x&nbsp; //16
 
-    variable x(32)
+    variable x = 32
     lda #x&nbsp; //32
 
     lda #y&nbsp; //64
-    constant y(64)
+    constant y = 64
     </pre>
 
     <h3>Labels</h3>
@@ -390,10 +413,10 @@
 
     <h4>Example:</h4>
     <pre>
-    variable offset(16)
+    variable offset = 16
 
     namespace information {
-    &nbsp;&nbsp;variable length(32)
+    &nbsp;&nbsp;variable length = 32
 
     &nbsp;&nbsp;lda #offset  //16
     &nbsp;&nbsp;lda #length  //32
@@ -543,6 +566,16 @@
     <h3>print ("string"|variable) [, ...]</h3>
     <p>Prints information to the terminal. Useful for debugging.</p>
 
+    <p>The print directive also supports formatting prefixes for variable or
+    constant expressions. These are: <i>binary</i>, <i>hex</i>, and <i>char</i>.
+    Example:</p>
+
+    <pre>
+    print "%", binary:15  //prints %1111
+    print "$", hex:65536  //prints $10000
+    print "'", char:65, "'"  //prints 'A'
+    </pre>
+
     <h3>notice "string"</h3>
     <p>Prints a notice to the terminal, but continues assembly.</p>
 
@@ -574,14 +607,6 @@
 
     <h3>pc()</h3>
     <p>Returns the current program counter (origin + base.)</p>
-
-    <h3>print_char(value)</h3>
-    <p>Writes the specified character to the terminal, and returns the value of
-    the printed character.</p>
-
-    <h3>print_hex(value)</h3>
-    <p>Like print_char, but prints hex values instead. Note that hex values are
-    unadorned and unpadded, eg print_hex(4095) will simply print fff.</p>
 
     <h2>The End</h2>
     <p>Hopefully this has been informative. The best way to learn is through

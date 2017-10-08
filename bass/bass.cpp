@@ -10,7 +10,7 @@
 #include <nall/main.hpp>
 auto nall::main(string_vector args) -> void {
   if(args.size() == 1) {
-    print(stderr, "bass v14.14\n");
+    print(stderr, "bass v15\n");
     print(stderr, "usage: bass [options] source [source ...]\n");
     print(stderr, "\n");
     print(stderr, "options:\n");
