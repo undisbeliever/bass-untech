@@ -12,7 +12,7 @@ ifeq ($(platform), windows)
 	name := $(name).exe
 endif
 
-all: out/$(name)
+all: out/$(name) out-architectures
 
 out/$(name): out $(objects)
 	$(compiler) -o out/$(name) $(objects) $(link)
@@ -22,7 +22,8 @@ obj/bass.o: obj bass.cpp bass.hpp $(call rwildcard,core/) $(call rwildcard,archi
 
 clean:
 	-@$(call delete,obj/*)
-	-@$(call delete,out/*)
+	-@$(call delete,out/$(name))
+	-@$(call delete,out/architectures/*)
 
 obj out:
 	mkdir $@
@@ -42,3 +43,26 @@ ifeq ($(shell id -un),root)
 else ifneq ($(filter $(platform),linux bsd),)
 	if [ -f $(prefix)/bin/$(name) ]; then rm $(prefix)/bin/$(name); fi
 endif
+
+
+# Copy architectures to out/ so bass-untech can be used without installing it
+architectures := $(wildcard data/architectures/*.arch)
+
+.PHONY: out-architectures
+out-architectures: out/architectures
+out-architectures: $(architectures:data/architectures/%=out/architectures/%)
+
+out/architectures/%.arch: data/architectures/%.arch
+ifeq ($(platform), windows)
+	copy "$(subst /,\,$<)" "$(subst /,\,$@)"
+else
+	cp "$<" "$@"
+endif
+
+out/architectures:
+ifeq ($(platform), windows)
+	mkdir out\architectures
+else
+	mkdir -p out/architectures
+endif
+
