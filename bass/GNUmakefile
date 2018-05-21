@@ -8,19 +8,23 @@ name := bass-untech
 objects := obj/bass.o
 arch_dir := bass/architectures
 
+ifeq ($(platform), windows)
+	name := $(name).exe
+endif
+
 all: out/$(name)
 
-out/$(name): out/ $(objects)
+out/$(name): out $(objects)
 	$(compiler) -o out/$(name) $(objects) $(link)
 
-obj/bass.o: obj/ bass.cpp bass.hpp $(call rwildcard,core/) $(call rwildcard,architecture/)
+obj/bass.o: obj bass.cpp bass.hpp $(call rwildcard,core/) $(call rwildcard,architecture/)
 	$(compiler) $(cppflags) $(flags) -o obj/bass.o -c bass.cpp
 
 clean:
 	-@$(call delete,obj/*)
 	-@$(call delete,out/*)
 
-obj/ out/:
+obj out:
 	mkdir $@
 
 install:
