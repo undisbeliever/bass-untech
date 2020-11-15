@@ -5,7 +5,7 @@
 #include "utility.cpp"
 
 auto Bass::target(const string& filename, bool create) -> bool {
-  if(targetFile.open()) targetFile.close();
+  if(targetFile) targetFile.close();
   if(!filename) return true;
 
   //cannot modify a file unless it exists
@@ -16,11 +16,12 @@ auto Bass::target(const string& filename, bool create) -> bool {
     return false;
   }
 
+  tracker.addresses.reset();
   return true;
 }
 
 auto Bass::symFile(const string& filename) -> bool {
-  if(symbolFile.open()) symbolFile.close();
+  if(symbolFile) symbolFile.close();
   if(!filename) return true;
 
   if(!symbolFile.open(filename, file::mode::write)) {
@@ -44,20 +45,22 @@ auto Bass::source(const string& filename) -> bool {
   data.transform("\t\r", "  ");
 
   auto lines = data.split("\n");
-  for(uint lineNumber : range(lines)) {
+  for(uint lineNumber : range(lines.size())) {
+    //remove single-line comments
     if(auto position = lines[lineNumber].qfind("//")) {
-      lines[lineNumber].resize(position());  //remove comments
+      lines[lineNumber].resize(position());
     }
 
+    //allow multiple statements per line, separated by ';'
     auto blocks = lines[lineNumber].qsplit(";").strip();
-    for(uint blockNumber : range(blocks)) {
+    for(uint blockNumber : range(blocks.size())) {
       string statement = blocks[blockNumber];
       strip(statement);
       if(!statement) continue;
 
       if(statement.match("include \"?*\"")) {
-        statement.trim("include \"", "\"", 1L);
-        source({Location::path(filename), statement});
+        statement.trimLeft("include ", 1L).strip();
+        source({Location::path(filename), text(statement)});
       } else {
         Instruction instruction;
         instruction.statement = statement;
@@ -79,7 +82,7 @@ auto Bass::define(const string& name, const string& value) -> void {
 auto Bass::constant(const string& name, const string& value) -> void {
   try {
     constantNames.insert(name);
-    constants.insert({name, evaluate(value)});
+    constants.insert({name, evaluate(value, Evaluation::Strict)});
   } catch(...) {
   }
 }
@@ -112,18 +115,30 @@ auto Bass::pc() const -> uint {
 }
 
 auto Bass::seek(uint offset) -> void {
-  if(!targetFile.open()) return;
+  if(!targetFile) return;
   if(writePhase()) targetFile.seek(offset);
+}
+
+auto Bass::track(uint length) -> void {
+  if(!tracker.enable) return;
+  uint64_t address = targetFile.offset();
+  for(auto n : range(length)) {
+    if(tracker.addresses.find(address + n)) {
+      error("overwrite detected at address 0x", hex(address + n), " [0x", hex(base + address + n), "]");
+    }
+    tracker.addresses.insert(address + n);
+  }
 }
 
 auto Bass::write(uint64_t data, uint length) -> void {
   if(writePhase()) {
-    if(targetFile.open()) {
+    if(targetFile) {
+      track(length);
       if(endian == Endian::LSB) targetFile.writel(data, length);
       if(endian == Endian::MSB) targetFile.writem(data, length);
     } else if(!isatty(fileno(stdout))) {
-      if(endian == Endian::LSB) for(auto n :  range(length)) fputc(data >> n * 8, stdout);
-      if(endian == Endian::MSB) for(auto n : rrange(length)) fputc(data >> n * 8, stdout);
+      if(endian == Endian::LSB) for(uint n : range(length)) fputc(data >> n * 8, stdout);
+      if(endian == Endian::MSB) for(uint n : reverse(range(length))) fputc(data >> n * 8, stdout);
     }
   }
   origin += length;
@@ -131,7 +146,7 @@ auto Bass::write(uint64_t data, uint length) -> void {
 
 auto Bass::writeSymbolLabel(int64_t value, const string& name) -> void {
   if(writePhase()) {
-    if(symbolFile.open()) {
+    if(symbolFile) {
       string scopedName = {scope.merge("."), scope ? "." : "", name};
       symbolFile.print(hex(value, 8), ' ', scopedName, '\n');
     }
@@ -148,9 +163,9 @@ auto Bass::printInstruction() -> void {
 auto Bass::printInstructionStack() -> void {
   printInstruction();
 
-  for(unsigned s : rrange(frames)) {
-    if(frames[s].invokedBy) {
-      auto& i = *frames[s].invokedBy;
+  for(const auto& frame : reverse(frames)) {
+    if(frame.invokedBy) {
+      auto& i = *frame.invokedBy;
       print(stderr, "   ", sourceFilenames[i.fileNumber], ":", i.lineNumber, ":", i.blockNumber, ": ", i.statement, "\n");
     }
   }
@@ -158,13 +173,13 @@ auto Bass::printInstructionStack() -> void {
 
 template<typename... P> auto Bass::notice(P&&... p) -> void {
   string s{forward<P>(p)...};
-  print(stderr, "notice: ", s, "\n");
+  print(stderr, terminal::color::gray("notice: "), s, "\n");
   printInstructionStack();
 }
 
 template<typename... P> auto Bass::warning(P&&... p) -> void {
   string s{forward<P>(p)...};
-  print(stderr, "warning: ", s, "\n");
+  print(stderr, terminal::color::yellow("warning: "), s, "\n");
   printInstructionStack();
 
   if(!strict) return;
@@ -174,7 +189,7 @@ template<typename... P> auto Bass::warning(P&&... p) -> void {
 
 template<typename... P> auto Bass::error(P&&... p) -> void {
   string s{forward<P>(p)...};
-  print(stderr, "error: ", s, "\n");
+  print(stderr, terminal::color::red("error: "), s, "\n");
   printInstructionStack();
 
   struct BassError {};

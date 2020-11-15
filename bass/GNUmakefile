@@ -1,47 +1,49 @@
-build := optimize
+name := bass-untech
+build := release
 console := true
-include ../nall/GNUmakefile
-
 flags += -I..
 
-name := bass-untech
+nall.path := ../nall
+include $(nall.path)/GNUmakefile
+
 objects := obj/bass.o
-arch_dir := bass/architectures
 
 ifeq ($(platform), windows)
 	name := $(name).exe
 endif
 
+obj/bass.o: bass.cpp
+
 all: out/$(name) out-architectures
 
-out/$(name): out $(objects)
-	$(compiler) -o out/$(name) $(objects) $(link)
+out/$(name): out obj $(objects)
+	$(info Linking out/$(name) ...)
+	+@$(compiler) -o out/$(name) $(objects) $(options)
 
-obj/bass.o: obj bass.cpp bass.hpp $(call rwildcard,core/) $(call rwildcard,architecture/)
-	$(compiler) $(cppflags) $(flags) -o obj/bass.o -c bass.cpp
+verbose: nall.verbose all;
 
 clean:
-	-@$(call delete,obj/*)
-	-@$(call delete,out/$(name))
-	-@$(call delete,out/architectures/*)
+	$(call delete,obj/*)
+	$(call delete,out/$(name))
+	$(call delete,out/architectures/*)
 
 obj out:
 	mkdir $@
 
-install:
+install: all
 ifeq ($(shell id -un),root)
 	$(error "make install should not be run as root")
 else ifneq ($(filter $(platform),linux bsd),)
-	if [ -f out/$(name) ]; then cp out/$(name) $(prefix)/bin/$(name); fi
-	mkdir -p $(prefix)/share/$(arch_dir)/
-	cp -R data/architectures/* $(prefix)/share/$(arch_dir)/
+	cp out/$(name) $(prefix)/bin/$(name)
+	mkdir -p $(prefix)/share/$(name)/architectures/
+	cp -R data/architectures/* $(prefix)/share/$(name)/architectures/
 endif
 
 uninstall:
 ifeq ($(shell id -un),root)
 	$(error "make uninstall should not be run as root")
 else ifneq ($(filter $(platform),linux bsd),)
-	if [ -f $(prefix)/bin/$(name) ]; then rm $(prefix)/bin/$(name); fi
+	rm -f $(prefix)/bin/$(name)
 endif
 
 
@@ -66,3 +68,4 @@ else
 	mkdir -p out/architectures
 endif
 
+-include obj/*.d

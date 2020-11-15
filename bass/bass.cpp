@@ -1,5 +1,5 @@
 //bass-untech
-//license: GPLv3
+//license: ISC
 //author: byuu
 //forked by: The UnDisbeliever
 //project started: 2013-09-27
@@ -9,10 +9,12 @@
 #include "architecture/table/table.cpp"
 
 #include <nall/main.hpp>
-auto nall::main(string_vector args) -> void {
-  if(args.size() == 1) {
-    print(stderr, "bass-untech v15\n");
-    print(stderr, "usage: bass-untech [options] source [source ...]\n");
+auto nall::main(Arguments arguments) -> void {
+  if(!arguments) {
+    print(stderr, "bass-untech v16\n");
+    print(stderr, "\n");
+    print(stderr, "usage:\n");
+    print(stderr, "  bass-untech [options] source [source ...]\n");
     print(stderr, "\n");
     print(stderr, "options:\n");
     print(stderr, "  -o target        specify default output filename [overwrite]\n");
@@ -26,70 +28,31 @@ auto nall::main(string_vector args) -> void {
   }
 
   string targetFilename;
-  string symFilename;
-  string_vector defines;
-  string_vector constants;
   bool create = false;
-  bool strict = false;
-  bool benchmark = false;
-  string_vector sourceFilenames;
+  if(arguments.take("-o", targetFilename)) create = true;
+  if(arguments.take("-m", targetFilename)) create = false;
 
-  for(uint n = 1; n < args.size();) {
-    const string& s = args[n];
+  vector<string> defines;
+  string define;
+  while(arguments.take("-d", define)) defines.append(define);
 
-    if(s == "-o") {
-      create = true;
-      targetFilename = args(n + 1, "");
-      n += 2;
-      continue;
-    }
+  vector<string> constants;
+  string constant;
+  while(arguments.take("-c", constant)) constants.append(constant);
 
-    if(s == "-m") {
-      create = false;
-      targetFilename = args(n + 1, "");
-      n += 2;
-      continue;
-    }
+  string symFilename;
+  arguments.take("-sym", symFilename);
 
-    if(s == "-d") {
-      defines.append(args(n + 1, ""));
-      n += 2;
-      continue;
-    }
+  bool strict = arguments.take("-strict");
+  bool benchmark = arguments.take("-benchmark");
 
-    if(s == "-c") {
-      constants.append(args(n + 1, ""));
-      n += 2;
-      continue;
-    }
-
-    if(s == "-sym") {
-      symFilename = args(n + 1, "");
-      n += 2;
-      continue;
-    }
-
-    if(s == "-strict") {
-      strict = true;
-      n += 1;
-      continue;
-    }
-
-    if(s == "-benchmark") {
-      benchmark = true;
-      n += 1;
-      continue;
-    }
-
-    if(!s.beginsWith("-")) {
-      sourceFilenames.append(s);
-      n += 1;
-      continue;
-    }
-
-    print(stderr, "error: unrecognized argument: ", s, "\n");
+  if(arguments.find("-*")) {
+    print(stderr, "error: unrecognized argument(s)\n");
     exit(EXIT_FAILURE);
   }
+
+  vector<string> sourceFilenames;
+  for(auto& argument : arguments) sourceFilenames.append(argument);
 
   clock_t clockStart = clock();
   Bass bass;
