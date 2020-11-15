@@ -1,8 +1,7 @@
 The UnDisbeliever's bass fork
 =============================
 
-This repository contains The UnDisbeliever's personal fork of
-[byuu's bass assembler](https://byuu.org/tool/bass/).
+This repository contains The UnDisbeliever's personal fork of byuu's bass assembler.
 
 It contains features that do not exist in vanilla bass, including:
  * Printing the instruction stack when displaying error messages
@@ -13,5 +12,5 @@ It contains features that do not exist in vanilla bass, including:
 License
 =======
 
-bass and bass-untech is licensed under the GNU GPLv3.
+bass and bass-untech is licensed under the ISC license.
 
