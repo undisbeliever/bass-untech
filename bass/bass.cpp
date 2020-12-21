@@ -11,7 +11,7 @@
 #include <nall/main.hpp>
 auto nall::main(Arguments arguments) -> void {
   if(!arguments) {
-    print(stderr, "bass-untech v16\n");
+    print(stderr, "bass-untech v17\n");
     print(stderr, "\n");
     print(stderr, "usage:\n");
     print(stderr, "  bass-untech [options] source [source ...]\n");

@@ -63,7 +63,7 @@ ifeq ($(compiler),)
   ifeq ($(platform),windows)
     compiler := g++
     compiler.cpp = $(compiler) -x c++ -std=gnu++17
-    flags.cpp = -x c++ -std=gnu++17
+    flags.cpp = -x c++ -std=gnu++17 -fno-operator-names
   else ifeq ($(platform),macos)
     compiler := clang++
   else ifeq ($(platform),linux)
@@ -86,6 +86,8 @@ else ifeq ($(build),release)
   flags += -O2 -DBUILD_RELEASE
 else ifeq ($(build),optimized)
   flags += -O3 -DBUILD_OPTIMIZED
+else
+  $(error unrecognized build type.)
 endif
 
 # link-time optimization
