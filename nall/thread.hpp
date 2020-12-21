@@ -10,16 +10,18 @@
 #include <nall/function.hpp>
 #include <nall/intrinsics.hpp>
 
+namespace nall {
+  using mutex = std::mutex;
+  using recursive_mutex = std::recursive_mutex;
+  template<typename T> using lock_guard = std::lock_guard<T>;
+  template<typename T> using atomic = std::atomic<T>;
+}
+
 #if defined(API_POSIX)
 
 #include <pthread.h>
 
 namespace nall {
-
-using mutex = std::mutex;
-using recursive_mutex = std::recursive_mutex;
-template<typename T> using lock_guard = std::lock_guard<T>;
-template<typename T> using atomic = std::atomic<T>;
 
 struct thread {
   auto join() -> void;

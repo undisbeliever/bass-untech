@@ -46,7 +46,7 @@
     </style>
   </head>
   <body>
-    <h1>bass v16</h1>
+    <h1>bass v17</h1>
     Author: byuu<br>
     License: ISC<br>
     <br>
@@ -550,6 +550,12 @@
     <p>This can be used to save and restore internal state. Currently supported
     values are: <i>origin, base, pc</i>.</p>
 
+    <h3>copy source, target, length</h3>
+    <p>This command copies a block from the currently open file to another
+    location within the file. It does this by reading the entire block in first,
+    and then writing said block out, so be careful with overlapping addresses.
+    </p>
+
     <h3>insert [name, ] "filename" [, offset] [, length]</h3>
     <p>This command inserts a binary file into the target file. You can
     optionally specify a name, offset and length. If you specify a name, it will
@@ -646,12 +652,18 @@
     <p>Returns the number of elements in an array, or produces an error if the
     array is not defined.</p>
 
-    <h3>file.exists("filename")</h3>
-    <p>Returns 1 if "filename" exists, or 0 if not.</p>
+    <h3>array.sort(name)</h3>
+    <p>Sorts the specified array in ascending order.</p>
+
+    <h3>assert(expression)</h3>
+    <p>Produces an error if the expression evaluates to zero.</p>
 
     <h3>file.size("filename")</h3>
     <p>Returns the size of "filename" on disk, or produces an error if the file
     is not found.</p>
+
+    <h3>file.exists("filename")</h3>
+    <p>Returns 1 if "filename" exists, or 0 if not.</p>
 
     <h3>read(address)</h3>
     <p>Reads a byte from the currently open output file, or produces an error if

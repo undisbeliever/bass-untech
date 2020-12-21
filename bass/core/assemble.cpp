@@ -159,6 +159,25 @@ auto Bass::assemble(const string& statement) -> bool {
     return true;
   }
 
+  //copy source, target, length
+  if(s.match("copy ?*")) {
+    auto p = split(s.trimLeft("copy ", 1L));
+    if(p.size() == 3) {
+      auto origin = targetFile.offset();
+      auto source = evaluate(p(0));
+      auto target = evaluate(p(1));
+      auto length = evaluate(p(2));
+      vector<u8> memory;
+      memory.resize(length);
+      targetFile.seek(source);
+      targetFile.read(memory);
+      targetFile.seek(target);
+      for(uint offset : range(length)) write(memory[offset]);
+      targetFile.seek(origin);
+      return true;
+    }
+  }
+
   //insert [name, ] filename [, offset] [, length]
   if(s.match("insert ?*")) {
     auto p = split(s.trimLeft("insert ", 1L));

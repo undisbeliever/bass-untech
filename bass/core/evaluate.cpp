@@ -87,6 +87,20 @@ auto Bass::evaluateExpression(Eval::Node* node, Evaluation mode) -> int64_t {
     error("unrecognized array: ", s);
     return 0;
   }
+  if(name == "array.sort#1") {
+    string s = evaluateString(node->link[1]);
+    if(auto array = findArray(s)) {
+      array->values.sort();
+      return 0;
+    }
+    error("unrecognized array: ", s);
+    return 0;
+  }
+  if(name == "assert#1") {
+    int64_t result = evaluate(node->link[1], mode);
+    if(result == 0) error("assertion failed");
+    return 0;
+  }
   if(name == "file.size#1") {
     string filename = evaluateString(node->link[1]).trim("\"", "\"", 1L);
     string location = {filepath(), filename};
