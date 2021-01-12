@@ -1,6 +1,6 @@
 //bass-untech
 //license: ISC
-//author: byuu
+//author: Near
 //forked by: The UnDisbeliever
 //project started: 2013-09-27
 
