@@ -91,7 +91,6 @@ struct Bass {
     uint ip;
     bool inlined;
 
-    Instruction* invokedBy = nullptr;
     hashset<Macro> macros;
     hashset<Define> defines;
     hashset<Expression> expressions;

@@ -164,8 +164,8 @@ auto Bass::printInstructionStack() -> void {
   printInstruction();
 
   for(const auto& frame : reverse(frames)) {
-    if(frame.invokedBy) {
-      auto& i = *frame.invokedBy;
+    if(frame.ip > 0 && frame.ip <= program.size()) {
+      auto& i = program[frame.ip - 1];
       print(stderr, "   ", sourceFilenames[i.fileNumber], ":", i.lineNumber, ":", i.blockNumber, ": ", i.statement, "\n");
     }
   }
